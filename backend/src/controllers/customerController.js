@@ -1,0 +1,93 @@
+import Customer from "../models/Customer.js";
+import bcrypt from "bcryptjs";
+
+//Get customer profile by ID
+export const getCustomerProfile = async (req, res) => {
+  try {
+    const customerId = req.customer._id;
+
+    //find customer by id
+    const customer = await Customer.findById(customerId).select(
+      "-password_hash" // exclude password hash
+    );
+    if (!customer) {
+      return res.status(404).json({ message: "Customer not found." });
+    }
+
+    res.status(200).json(customer);
+  } catch (error) {
+    console.error("Error fetching customer profile:", error);
+    res.status(500).json({ message: "Server error." });
+  }
+};
+
+//Update customer profile
+export const updateCustomerProfile = async (req, res) => {
+  try {
+    const customerId = req.customer._id;
+    const {
+      username,
+      email,
+      first_name,
+      last_name,
+      phone,
+      address,
+      old_password,
+      new_password,
+      confirm_password,
+    } = req.body;
+
+    const customer = await Customer.findById(customerId);
+    if (!customer) {
+      return res.status(404).json({ message: "Customer not found" });
+    }
+
+    // Update normal fields
+    if (username) customer.username = username;
+    if (email) customer.email = email;
+    if (first_name) customer.first_name = first_name;
+    if (last_name) customer.last_name = last_name;
+    if (phone) customer.phone = phone;
+    if (address) customer.address = address;
+
+    // Handle password change
+    if (old_password || new_password || confirm_password) {
+      if (!old_password || !new_password || !confirm_password) {
+        return res
+          .status(400)
+          .json({ message: "All password fields are required" });
+      }
+
+      // Check old password
+      const isMatch = await bcrypt.compare(
+        old_password,
+        customer.password_hash
+      );
+      if (!isMatch) {
+        return res.status(400).json({ message: "Old password is incorrect" });
+      }
+
+      // Check new password confirmation
+      if (new_password !== confirm_password) {
+        return res
+          .status(400)
+          .json({ message: "New password and confirmation do not match" });
+      }
+
+      // Hash new password
+      const salt = await bcrypt.genSalt(10);
+      customer.password_hash = await bcrypt.hash(new_password, salt);
+    }
+
+    // Save updates
+    await customer.save();
+
+    const updatedCustomer = customer.toObject();
+    delete updatedCustomer.password_hash;
+
+    res.status(200).json(updatedCustomer);
+  } catch (error) {
+    console.error("Error updating customer profile:", error);
+    res.status(500).json({ message: "Server error" });
+  }
+};

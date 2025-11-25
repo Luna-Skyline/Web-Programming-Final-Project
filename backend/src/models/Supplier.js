@@ -5,7 +5,7 @@ const SupplierSchema = new mongoose.Schema({
   contact_person: { type: String, maxlength: 100 },
   email: { type: String, maxlength: 100 },
   phone: { type: String, maxlength: 20 },
-  addres: { type: String },
+  address: { type: String },
   is_active: { type: Boolean, default: true },
   created_at: { type: Date, default: Date.now },
 });
