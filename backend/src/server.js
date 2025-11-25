@@ -3,7 +3,9 @@ import dotenv from "dotenv";
 import cors from "cors";
 import connectDB from "./config/db.js";
 import path from "path";
+import cookieParser from "cookie-parser";
 import { fileURLToPath } from "url";
+import customerAuthRoutes from "../routes/customerAuthRoutes.js";
 
 dotenv.config();
 const app = express();
@@ -24,13 +26,16 @@ app.use(
 //Middleware to parse JSON
 app.use(express.json());
 
+// Middleware to parse cookies
+app.use(cookieParser());
+
 // Default route
 app.get("/", (req, res) => {
   res.send("API is running...");
 });
 
 // Routes
-app.use("/auth", authRoutes);
+app.use("/api/customers", customerAuthRoutes);
 
 // Serve static images
 const __filename = fileURLToPath(import.meta.url);
