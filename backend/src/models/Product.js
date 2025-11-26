@@ -18,6 +18,7 @@ const ProductSchema = new mongoose.Schema({
     enum: ["Hardcover", "Paperback", "eBook"],
     default: "Paperback",
   },
+  image_url: { type: String, default: null },
   is_active: { type: Boolean, default: true },
   created_at: { type: Date, default: Date.now },
   updated_at: { type: Date, default: Date.now },

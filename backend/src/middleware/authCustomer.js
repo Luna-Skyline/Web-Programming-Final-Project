@@ -45,3 +45,6 @@ export const protectCustomer = async (req, res, next) => {
 };
 
 export default protectCustomer;
+
+// For Random JWT Secret Generation
+// node -e "console.log(require('node:crypto').randomBytes(8).toString('hex'))"

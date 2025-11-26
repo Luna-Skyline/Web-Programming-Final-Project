@@ -16,6 +16,7 @@ import adminInventoryRoutes from "./routes/adminInventoryRoutes.js";
 import adminOrderRoutes from "./routes/adminOrderRoutes.js";
 import adminReportRoutes from "./routes/adminReportRoutes.js";
 import adminAuthRoutes from "./routes/adminAuthRoutes.js";
+import categoryRoutes from "./routes/categoryRoutes.js";
 
 dotenv.config();
 const app = express();
@@ -48,6 +49,7 @@ app.get("/", (req, res) => {
 app.use("/api/customers", customerAuthRoutes, customerRoutes);
 app.use("/api/products", productRoutes);
 app.use("/api/orders", orderRoutes);
+app.use("/api/categories", categoryRoutes);
 
 // Admin Routes
 app.use("/api/admin", adminAuthRoutes);
