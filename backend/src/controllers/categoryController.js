@@ -25,3 +25,23 @@ export const getCategoriesByGenre = async (req, res) => {
     res.status(500).json({ success: false, message: "Server error" });
   }
 };
+
+// Get Categories by IDs
+export const getCategoriesByIds = async (req, res) => {
+  try {
+    const { ids } = req.body; // Expecting an array of category IDs
+    if (!Array.isArray(ids) || ids.length === 0) {
+      return res
+        .status(400)
+        .json({ success: false, message: "Invalid category IDs." });
+    }
+    const categories = await Category.find({
+      _id: { $in: ids },
+      is_active: true,
+    }).lean();
+    res.status(200).json({ success: true, categories });
+  } catch (error) {
+    console.error("Error fetching categories by IDs:", error);
+    res.status(500).json({ success: false, message: "Server error" });
+  }
+};

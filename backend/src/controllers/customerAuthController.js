@@ -67,8 +67,8 @@ export const registerCustomer = async (req, res) => {
     res.cookie("token", token, {
       httpOnly: true, // cannot be accessed by JS
       secure: process.env.NODE_ENV === "production", // only over HTTPS in prod
-      sameSite: "strict",
-      expires: new Date(Date.now() + 3600000), // 1 hour
+      sameSite: "lax",
+      maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
     });
 
     res.status(201).json({
@@ -127,8 +127,8 @@ export const loginCustomer = async (req, res) => {
     res.cookie("token", token, {
       httpOnly: true, // cannot be accessed by JS
       secure: process.env.NODE_ENV === "production", // only over HTTPS in prod
-      sameSite: "strict",
-      expires: new Date(Date.now() + 3600000), // 1 hour
+      sameSite: "lax",
+      maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
     });
 
     res.status(200).json({

@@ -20,12 +20,10 @@ export const createInventory = async (req, res) => {
       last_restocked: stock_quantity ? new Date() : null,
     });
 
-    res
-      .status(201)
-      .json({
-        message: "Inventory created successfully",
-        inventory: newInventory,
-      });
+    res.status(201).json({
+      message: "Inventory created successfully",
+      inventory: newInventory,
+    });
   } catch (error) {
     console.error("Error creating inventory:", error);
     res.status(500).json({ message: "Server error" });
@@ -40,6 +38,24 @@ export const getAllInventory = async (req, res) => {
       .lean();
 
     res.status(200).json(inventoryList);
+  } catch (error) {
+    console.error("Error fetching inventory:", error);
+    res.status(500).json({ message: "Server error" });
+  }
+};
+
+//Admin: Get inventory by ID with product details
+export const getInventoryById = async (req, res) => {
+  try {
+    const inventoryId = req.params.id;
+
+    const inventory = await Inventory.findById(inventoryId)
+      .populate("product_id", "product_name author unit_price")
+      .lean();
+    if (!inventory) {
+      return res.status(404).json({ message: "Inventory record not found" });
+    }
+    res.status(200).json(inventory);
   } catch (error) {
     console.error("Error fetching inventory:", error);
     res.status(500).json({ message: "Server error" });
@@ -69,12 +85,10 @@ export const updateInventory = async (req, res) => {
     if (!updatedInventory)
       return res.status(404).json({ message: "Inventory record not found" });
 
-    res
-      .status(200)
-      .json({
-        message: "Inventory updated successfully",
-        inventory: updatedInventory,
-      });
+    res.status(200).json({
+      message: "Inventory updated successfully",
+      inventory: updatedInventory,
+    });
   } catch (error) {
     console.error("Error updating inventory:", error);
     res.status(500).json({ message: "Server error" });

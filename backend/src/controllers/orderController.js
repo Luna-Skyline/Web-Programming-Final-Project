@@ -97,7 +97,10 @@ export const viewOrderDetails = async (req, res) => {
 
     // Fetch order details (products + quantities)
     const orderDetails = await OrderDetail.find({ order_id: orderId })
-      .populate("product_id", "product_name unit_price") // populate product info
+      .populate(
+        "product_id",
+        "product_name unit_price author image_url"
+      ) // populate product info
       .lean();
 
     // Attach inventory info to each product
@@ -119,7 +122,7 @@ export const viewOrderDetails = async (req, res) => {
     );
 
     res.status(200).json({
-      ...order,
+      ...order._doc,
       orderDetails: orderDetailsWithInventory,
     });
   } catch (error) {
@@ -142,7 +145,10 @@ export const viewOrderHistory = async (req, res) => {
     const ordersWithDetails = await Promise.all(
       orders.map(async (order) => {
         const orderDetails = await OrderDetail.find({ order_id: order._id })
-          .populate("product_id", "product_name unit_price") // product info
+          .populate(
+            "product_id",
+            "product_name unit_price author image_url"
+          ) // product info
           .lean();
 
         return {

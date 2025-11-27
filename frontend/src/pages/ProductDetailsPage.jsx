@@ -1,0 +1,287 @@
+import React, { useState, useEffect, useContext } from "react";
+import { useParams, useNavigate, Link } from "react-router-dom";
+import axios from "axios";
+import { ShoppingCart, Loader } from "lucide-react";
+import AuthRedirectModal from "../components/AuthRedirectModal";
+import ConfirmationModal from "../components/ConfirmationModal";
+import { AuthContext } from "../components/AuthContext.jsx";
+import { useCart } from "../components/CartContext";
+
+const ProductDetailsPage = () => {
+  const { id } = useParams();
+  const [product, setProduct] = useState(null);
+  const [recommendations, setRecommendations] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+  const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
+  const [confirmationModal, setConfirmationModal] = useState({
+    isOpen: false,
+    title: "",
+    message: "",
+    onConfirm: null,
+    confirmText: "OK",
+    cancelText: "Cancel",
+    iconType: "info",
+  });
+  const { authState } = useContext(AuthContext);
+  const { addToCart } = useCart();
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    window.scrollTo(0, 0);
+    const fetchProduct = async () => {
+      setLoading(true);
+      try {
+        const res = await axios.get(`http://localhost:5000/api/products/${id}`);
+        setProduct(res.data);
+      } catch (err) {
+        setError("Failed to fetch product details.");
+        console.error(err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchProduct();
+  }, [id]);
+
+  useEffect(() => {
+    if (product) {
+      const fetchRecommendations = async () => {
+        try {
+          const res = await axios.get(
+            `http://localhost:5000/api/products?category_id=${product.category_id._id}&limit=5`
+          );
+          setRecommendations(res.data.filter((p) => p._id !== product._id));
+        } catch (err) {
+          console.error("Failed to fetch recommendations.", err);
+        }
+      };
+      fetchRecommendations();
+    }
+  }, [product]);
+
+  const inStock = product?.inventory?.stock_quantity ?? 0;
+
+  const handleAddToCart = () => {
+    if (inStock === 0) {
+      if (authState.isLoggedIn) {
+        // Logged in → show confirmation modal
+        setConfirmationModal({
+          isOpen: true,
+          title: "Out of Stock",
+          message: "This item is currently out of stock.",
+          onConfirm: null,
+          confirmText: null,
+          cancelText: "OK",
+          iconType: "warning",
+        });
+      } else {
+        // Not logged in → show auth redirect modal
+        setIsAuthModalOpen(true);
+      }
+      return;
+    }
+
+    // Item is in stock
+    if (!authState.isLoggedIn) {
+      setIsAuthModalOpen(true);
+    } else {
+      setConfirmationModal({
+        isOpen: true,
+        title: "Add to Cart",
+        message: "Proceed to add this item to your cart?",
+        onConfirm: () => {
+          addToCart(product);
+          navigate("/cart");
+        },
+        confirmText: "Proceed",
+        cancelText: "Cancel",
+        iconType: "info",
+      });
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center h-screen bg-[#F5F3F0]">
+        <Loader className="animate-spin w-12 h-12 text-[#1F3B6D]" />
+      </div>
+    );
+  }
+
+  if (error) {
+    return <div className="text-center text-red-500 p-8">{error}</div>;
+  }
+
+  if (!product) {
+    return (
+      <div className="text-center p-8 text-[#1F3B6D]">Product not found.</div>
+    );
+  }
+
+  const imageUrl = product.image_url?.startsWith("http")
+    ? product.image_url
+    : product.image_url
+    ? `http://localhost:5000/public/images/${product.image_url
+        .split("/")
+        .pop()}`
+    : "https://via.placeholder.com/400x400?text=No+Image";
+
+  const categoryName = product.category_id?.category_name ?? "N/A";
+  const categoryGenre = product.category_id?.genre ?? "N/A";
+  const supplierName = product.supplier_id?.supplier_name ?? "N/A";
+
+  return (
+    <div className="min-h-screen bg-[#F5F3F0] p-8">
+      <AuthRedirectModal
+        isOpen={isAuthModalOpen}
+        onClose={() => setIsAuthModalOpen(false)}
+      />
+      <ConfirmationModal
+        isOpen={confirmationModal.isOpen}
+        onClose={() =>
+          setConfirmationModal({ ...confirmationModal, isOpen: false })
+        }
+        onConfirm={confirmationModal.onConfirm}
+        title={confirmationModal.title}
+        message={confirmationModal.message}
+        confirmText={confirmationModal.confirmText}
+        cancelText={confirmationModal.cancelText}
+        iconType={confirmationModal.iconType}
+      />
+      <div className="container mx-auto max-w-5xl">
+        <div className="grid md:grid-cols-2 gap-8">
+          {/* Product Image */}
+          <div>
+            <img
+              src={imageUrl}
+              alt={product.product_name}
+              className="w-full h-auto object-cover rounded-lg shadow-md"
+            />
+          </div>
+
+          {/* Product Info */}
+          <div>
+            <h1 className="text-4xl font-bold text-[#1F3B6D] mb-2">
+              {product.product_name}
+            </h1>
+            <p className="text-xl text-[#757575] mb-4">
+              by {product.author ?? "Unknown Author"}
+            </p>
+
+            <p className="text-[#4A90E2] mb-6">
+              ${product.unit_price?.toFixed(2) ?? "0.00"}
+            </p>
+
+            <div className="flex items-center space-x-4 mb-6">
+              <button
+                onClick={handleAddToCart}
+                className="flex items-center justify-center bg-[#4A90E2] text-white py-3 px-6 rounded-lg font-semibold hover:bg-[#3A7BC8] transition-colors"
+              >
+                <ShoppingCart className="mr-2" />
+                Add to Cart
+              </button>
+              <span
+                className={`text-sm font-semibold ${
+                  inStock > 0 ? "text-green-600" : "text-red-600"
+                }`}
+              >
+                {inStock > 0 ? `${inStock} in stock` : "Out of Stock"}
+              </span>
+            </div>
+
+            <div className="space-y-2 text-[#333333]">
+              <p>
+                <strong className="text-[#1F3B6D]">Publisher:</strong>{" "}
+                {product.publisher ?? "N/A"}
+              </p>
+              <p>
+                <strong className="text-[#1F3B6D]">Publication Year:</strong>{" "}
+                {product.publication_year ?? "N/A"}
+              </p>
+              <p>
+                <strong className="text-[#1F3B6D]">ISBN:</strong>{" "}
+                {product.isbn ?? "N/A"}
+              </p>
+              <p>
+                <strong className="text-[#1F3B6D]">Genre:</strong>{" "}
+                {categoryGenre}
+              </p>
+              <p>
+                <strong className="text-[#1F3B6D]">Category:</strong>{" "}
+                {categoryName}
+              </p>
+              <p>
+                <strong className="text-[#1F3B6D]">Supplier:</strong>{" "}
+                {supplierName}
+              </p>
+              <p>
+                <strong className="text-[#1F3B6D]">Format:</strong>{" "}
+                {product.format ?? "N/A"}
+              </p>
+              <p>
+                <strong className="text-[#1F3B6D]">Pages:</strong>{" "}
+                {product.number_of_pages ?? "N/A"}
+              </p>
+            </div>
+          </div>
+        </div>
+
+        {/* Description */}
+        <div className="mt-8 pt-8 border-t border-[#E0E0E0]">
+          <h2 className="text-2xl font-bold text-[#1F3B6D] mb-4">
+            Description
+          </h2>
+          <p className="text-[#757575] leading-relaxed">
+            {product.description ?? "No description available."}
+          </p>
+        </div>
+
+        {/* Recommendations */}
+        {recommendations.length > 0 && (
+          <div className="mt-8 pt-8 border-t border-[#E0E0E0]">
+            <h2 className="text-2xl font-bold text-[#1F3B6D] mb-4">
+              You May Also Like
+            </h2>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              {recommendations.map((rec) => (
+                <ProductCard key={rec._id} product={rec} />
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
+
+const ProductCard = ({ product }) => {
+  const imageUrl = product.image_url?.startsWith("http")
+    ? product.image_url
+    : product.image_url
+    ? `http://localhost:5000/public/images/${product.image_url
+        .split("/")
+        .pop()}`
+    : "https://via.placeholder.com/150x150?text=No+Image";
+
+  return (
+    <Link
+      to={`/product/${product._id}`}
+      className="border rounded-lg p-4 hover:shadow-lg transition-shadow"
+    >
+      <img
+        src={imageUrl}
+        alt={product.product_name}
+        className="w-full h-48 object-cover mb-4"
+      />
+      <h3 className="font-bold text-lg">{product.product_name}</h3>
+      <p className="text-gray-500">{product.author}</p>
+      <p className="font-bold text-[#4A90E2] mt-2">
+        ${product.unit_price.toFixed(2)}
+      </p>
+    </Link>
+  );
+};
+
+export default ProductDetailsPage;

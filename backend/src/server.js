@@ -24,15 +24,33 @@ const app = express();
 // Connect DB
 connectDB();
 
-//Allow frontend connection
+// Enable CORS globally (already done)
 app.use(
   cors({
     origin: "http://localhost:5173",
     credentials: true,
-    methods: "*",
-    allowedHeaders: "*",
+    methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization", "X-Requested-With"],
   })
 );
+
+// Preflight handler for all routes
+app.use((req, res, next) => {
+  if (req.method === "OPTIONS") {
+    res.header("Access-Control-Allow-Origin", "http://localhost:5173");
+    res.header(
+      "Access-Control-Allow-Methods",
+      "GET,POST,PUT,DELETE,PATCH,OPTIONS"
+    );
+    res.header(
+      "Access-Control-Allow-Headers",
+      "Content-Type,Authorization,X-Requested-With"
+    );
+    res.sendStatus(200);
+  } else {
+    next();
+  }
+});
 
 //Middleware to parse JSON
 app.use(express.json());
@@ -63,8 +81,13 @@ app.use("/api/admin/reports", adminReportRoutes);
 // Serve static images
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-app.use("/images", express.static(path.join(__dirname, "public/images")));
+app.use(
+  "/public/images",
+  express.static(path.join(__dirname, "..", "public/images"))
+);
 
 //Server
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+
+export default app;

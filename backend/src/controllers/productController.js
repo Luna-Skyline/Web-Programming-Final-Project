@@ -6,14 +6,62 @@ import Inventory from "../models/Inventory.js";
 export const browseProducts = async (req, res) => {
   try {
     // Get query parameters for filtering and sorting
-    const { category_id, genre, price_min, price_max, sort_by, order } =
-      req.query;
+    const {
+      category_id,
+      genre,
+      price_min,
+      price_max,
+      sort_by,
+      order,
+      search,
+      limit,
+    } = req.query;
 
     // Build filter object
-    const filter = { is_active: true }; // only active products
+    const filter = { is_active: true };
 
-    // Filter by category ID
-    if (category_id) filter.category_id = category_id;
+    // Handle search
+    if (search) {
+      const searchRegex = new RegExp(search, "i");
+      filter.$or = [
+        { product_name: searchRegex },
+        { author: searchRegex },
+        { isbn: searchRegex },
+      ];
+    }
+
+    // Handle category and genre filtering
+    let categoryIds = [];
+    if (genre) {
+      const categoriesInGenre = await Category.find({
+        genre: genre,
+        is_active: true,
+      }).select("_id");
+      categoryIds = categoriesInGenre.map((cat) => cat._id);
+    }
+
+    if (category_id) {
+      const selectedCategoryIds = category_id.split(",");
+      if (categoryIds.length > 0) {
+        // Intersect with genre-filtered categories
+        const genreCategoryIdsSet = new Set(
+          categoryIds.map((id) => id.toString())
+        );
+        const finalCategoryIds = selectedCategoryIds.filter((id) =>
+          genreCategoryIdsSet.has(id)
+        );
+        if (finalCategoryIds.length > 0) {
+          filter.category_id = { $in: finalCategoryIds };
+        } else {
+          // If no intersection, return no products
+          return res.status(200).json([]);
+        }
+      } else {
+        filter.category_id = { $in: selectedCategoryIds };
+      }
+    } else if (genre && categoryIds.length > 0) {
+      filter.category_id = { $in: categoryIds };
+    }
 
     // Filter by price range
     if (price_min || price_max) {
@@ -22,21 +70,23 @@ export const browseProducts = async (req, res) => {
       if (price_max) filter.unit_price.$lte = Number(price_max);
     }
 
-    // Start query with filter and populate category details
-    let query = Product.find(filter)
-      .populate("category_id", "category_name genre")
-      .lean();
-
-    // Filter by genre if provided
-    if (genre) {
-      query = query.where("category_id.genre").equals(genre);
-    }
+    // Start query with filter
+    let query = Product.find(filter);
 
     // Apply sorting if specified
     if (sort_by) {
       const sortOrder = order === "desc" ? -1 : 1;
       query = query.sort({ [sort_by]: sortOrder });
     }
+
+    // Apply limit if specified
+    if (limit) {
+      query = query.limit(parseInt(limit, 10));
+    }
+    
+    // Populate category details
+    query = query.populate("category_id", "category_name genre").lean();
+
 
     // Fetch products from database
     const products = await query;
@@ -66,17 +116,17 @@ export const browseProducts = async (req, res) => {
   }
 };
 
-//View single product details by ID
+// View single product details by ID
 export const viewProductDetails = async (req, res) => {
   try {
     const productId = req.params.id;
 
-    //validate product ID
+    // Validate product ID
     if (!productId.match(/^[0-9a-fA-F]{24}$/)) {
       return res.status(400).json({ message: "Invalid product ID." });
     }
 
-    //Fetch product and populate category and supplier details
+    // Fetch product and populate category and supplier details
     const product = await Product.findById(productId)
       .populate("category_id", "category_name genre")
       .populate(
@@ -85,17 +135,17 @@ export const viewProductDetails = async (req, res) => {
       )
       .lean();
 
-    //If product not found
+    // If product not found
     if (!product) {
       return res.status(404).json({ message: "Product not found." });
     }
 
-    //Fetch inventory details
+    // Fetch inventory details
     const inventory = await Inventory.findOne({
       product_id: product._id,
     }).lean();
 
-    //Combine product with inventory info
+    // Combine product with inventory info
     const productDetails = {
       ...product,
       inventory: inventory || {
@@ -105,7 +155,7 @@ export const viewProductDetails = async (req, res) => {
       },
     };
 
-    //Return product details
+    // Return product details
     res.status(200).json(productDetails);
   } catch (error) {
     console.error("Error viewing product details:", error);

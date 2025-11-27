@@ -4,6 +4,7 @@ import {
   getAllCategories,
   updateCategory,
   deleteCategory,
+  getCategoryById,
 } from "../controllers/adminCategoryController.js";
 import protectAdmin from "../middleware/authAdmin.js";
 
@@ -15,8 +16,11 @@ router.post("/", protectAdmin, createCategory);
 // Get all categories
 router.get("/", protectAdmin, getAllCategories);
 
+// Get category by ID
+router.get("/:id", protectAdmin, getCategoryById);
+
 // Update category by ID
-router.put("/:id", protectAdmin, updateCategory);
+router.patch("/:id", protectAdmin, updateCategory);
 
 // Delete category by ID
 router.delete("/:id", protectAdmin, deleteCategory);

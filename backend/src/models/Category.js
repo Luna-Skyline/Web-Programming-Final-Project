@@ -9,9 +9,8 @@ const CategorySchema = new mongoose.Schema({
   updated_at: { type: Date, default: Date.now },
 });
 
-CategorySchema.pre("save", function (next) {
+CategorySchema.pre("save", function () {
   this.updated_at = new Date();
-  next();
 });
 
 export default mongoose.model("Category", CategorySchema);

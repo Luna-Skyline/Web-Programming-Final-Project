@@ -95,6 +95,40 @@ export const getAllProducts = async (req, res) => {
   }
 };
 
+// Admin: Get product by ID with category, supplier, and inventory
+export const getProductById = async (req, res) => {
+  try {
+    const productId = req.params.id;
+
+    // Fetch product and populate category and supplier
+    const product = await Product.findById(productId)
+      .populate("category_id", "category_name genre")
+      .populate(
+        "supplier_id",
+        "supplier_name contact_person email phone address"
+      )
+      .lean();
+
+    if (!product) {
+      return res.status(404).json({ message: "Product not found" });
+    }
+
+    // Fetch inventory for this product
+    const inventory = await Inventory.findOne({
+      product_id: product._id,
+    }).lean();
+
+    // Send combined response
+    res.status(200).json({
+      ...product,
+      inventory: inventory || { quantity: 0, location: null }, // default inventory
+    });
+  } catch (error) {
+    console.error("Error fetching product:", error);
+    res.status(500).json({ message: "Server error" });
+  }
+};
+
 // Admin: Update product (including inventory)
 export const updateProduct = async (req, res) => {
   try {
@@ -139,12 +173,10 @@ export const updateProduct = async (req, res) => {
       );
     }
 
-    res
-      .status(200)
-      .json({
-        message: "Product updated successfully",
-        product: updatedProduct,
-      });
+    res.status(200).json({
+      message: "Product updated successfully",
+      product: updatedProduct,
+    });
   } catch (error) {
     console.error("Error updating product:", error);
     res.status(500).json({ message: "Server error" });

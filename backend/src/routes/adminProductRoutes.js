@@ -4,6 +4,7 @@ import {
   getAllProducts,
   updateProduct,
   deleteProduct,
+  getProductById,
 } from "../controllers/adminProductController.js";
 import protectAdmin from "../middleware/authAdmin.js";
 
@@ -15,8 +16,11 @@ router.post("/", protectAdmin, createProduct);
 // Get all products
 router.get("/", protectAdmin, getAllProducts);
 
+// Get product by ID
+router.get("/:id", protectAdmin, getProductById);
+
 // Update product by ID
-router.put("/:id", protectAdmin, updateProduct);
+router.patch("/:id", protectAdmin, updateProduct);
 
 // Delete product by ID
 router.delete("/:id", protectAdmin, deleteProduct);

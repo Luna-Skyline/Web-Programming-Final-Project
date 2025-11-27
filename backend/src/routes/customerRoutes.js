@@ -11,6 +11,6 @@ const router = express.Router();
 router.get("/profile", protectCustomer, getCustomerProfile);
 
 // Update Customer Profile
-router.put("/profile", protectCustomer, updateCustomerProfile);
+router.patch("/profile", protectCustomer, updateCustomerProfile);
 
 export default router;

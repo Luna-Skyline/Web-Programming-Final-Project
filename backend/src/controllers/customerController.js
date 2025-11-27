@@ -4,20 +4,26 @@ import bcrypt from "bcryptjs";
 //Get customer profile by ID
 export const getCustomerProfile = async (req, res) => {
   try {
+    // If token expired OR not logged in
+    if (!req.customer) {
+      return res.status(401).json({ message: "Not logged in." });
+    }
+
     const customerId = req.customer._id;
 
-    //find customer by id
+    // Find customer by ID
     const customer = await Customer.findById(customerId).select(
-      "-password_hash" // exclude password hash
+      "-password_hash"
     );
+
     if (!customer) {
       return res.status(404).json({ message: "Customer not found." });
     }
 
-    res.status(200).json(customer);
+    return res.status(200).json(customer);
   } catch (error) {
     console.error("Error fetching customer profile:", error);
-    res.status(500).json({ message: "Server error." });
+    return res.status(500).json({ message: "Server error." });
   }
 };
 
