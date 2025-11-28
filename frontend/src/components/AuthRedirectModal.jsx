@@ -24,7 +24,7 @@ const AuthRedirectModal = ({ isOpen, onClose }) => {
         </h2>
 
         <p className="text-center text-gray-600 mb-6">
-          You must be logged in to place an order.
+          You must be logged in to access this page.
         </p>
 
         <div className="flex flex-col space-y-3">

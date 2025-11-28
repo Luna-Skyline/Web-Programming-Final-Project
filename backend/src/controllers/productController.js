@@ -2,10 +2,9 @@ import Product from "../models/Product.js";
 import Category from "../models/Category.js";
 import Inventory from "../models/Inventory.js";
 
-// Browse all products with category, inventory details, filters, and sorting
+// Browse all products with category, inventory details, filters, and sorting.
 export const browseProducts = async (req, res) => {
   try {
-    // Get query parameters for filtering and sorting
     const {
       category_id,
       genre,
@@ -15,7 +14,11 @@ export const browseProducts = async (req, res) => {
       order,
       search,
       limit,
+      page,
     } = req.query;
+
+    const pageNum = Math.max(1, parseInt(page, 10) || 1);
+    const limitNum = parseInt(limit, 10) || 0; // 0 => no limit (return all)
 
     // Build filter object
     const filter = { is_active: true };
@@ -30,14 +33,14 @@ export const browseProducts = async (req, res) => {
       ];
     }
 
-    // Handle category and genre filtering
+    // Handle category and genre filtering (keep existing logic)
     let categoryIds = [];
     if (genre) {
       const categoriesInGenre = await Category.find({
         genre: genre,
         is_active: true,
       }).select("_id");
-      categoryIds = categoriesInGenre.map((cat) => cat._id);
+      categoryIds = categoriesInGenre.map((c) => c._id);
     }
 
     if (category_id) {
@@ -54,7 +57,7 @@ export const browseProducts = async (req, res) => {
           filter.category_id = { $in: finalCategoryIds };
         } else {
           // If no intersection, return no products
-          return res.status(200).json([]);
+          return res.status(200).json({ items: [], totalCount: 0 });
         }
       } else {
         filter.category_id = { $in: selectedCategoryIds };
@@ -70,6 +73,9 @@ export const browseProducts = async (req, res) => {
       if (price_max) filter.unit_price.$lte = Number(price_max);
     }
 
+    // Get total count BEFORE applying skip/limit
+    const totalCount = await Product.countDocuments(filter);
+
     // Start query with filter
     let query = Product.find(filter);
 
@@ -79,19 +85,17 @@ export const browseProducts = async (req, res) => {
       query = query.sort({ [sort_by]: sortOrder });
     }
 
-    // Apply limit if specified
-    if (limit) {
-      query = query.limit(parseInt(limit, 10));
+    // Apply pagination (skip + limit) if limit provided
+    if (limitNum > 0) {
+      const skip = (pageNum - 1) * limitNum;
+      query = query.skip(skip).limit(limitNum);
     }
-    
-    // Populate category details
+
+    // Populate category details and fetch results
     query = query.populate("category_id", "category_name genre").lean();
-
-
-    // Fetch products from database
     const products = await query;
 
-    // Fetch inventory details for each product
+    // Fetch inventory details for each product (keep existing attach logic)
     const productsWithInventory = await Promise.all(
       products.map(async (product) => {
         const inventory = await Inventory.findOne({
@@ -103,13 +107,14 @@ export const browseProducts = async (req, res) => {
             stock_quantity: 0,
             reorder_level: 0,
             max_stock_level: 0,
+            last_restocked: null,
           },
         };
       })
     );
 
-    // Return products with inventory info
-    res.status(200).json(productsWithInventory);
+    // Return items + totalCount for frontend pagination
+    res.status(200).json({ items: productsWithInventory, totalCount });
   } catch (error) {
     console.error("Error browsing products:", error);
     res.status(500).json({ message: "Server error." });

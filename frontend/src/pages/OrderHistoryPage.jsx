@@ -4,6 +4,7 @@ import { Loader, AlertCircle } from "lucide-react";
 import axios from "axios";
 import { AuthContext } from "../components/AuthContext";
 import OrderCard from "../components/OrderCard";
+import AuthRedirectModal from "../components/AuthRedirectModal";
 
 const OrderHistoryPage = () => {
   const { authState } = useContext(AuthContext);
@@ -12,6 +13,7 @@ const OrderHistoryPage = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [filter, setFilter] = useState("all");
+  const [showAuthModal, setShowAuthModal] = useState(false);
 
   const palette = {
     primary: "#0F1E3D",
@@ -20,6 +22,16 @@ const OrderHistoryPage = () => {
     gray: "#757575",
     white: "#FFFFFF",
   };
+
+  useEffect(() => {
+    const isAuthenticated =
+      Boolean(authState?.isLoggedIn) ||
+      Boolean(authState?.token) ||
+      Boolean(localStorage.getItem("customerToken")) ||
+      Boolean(localStorage.getItem("authToken"));
+
+    setShowAuthModal(!isAuthenticated);
+  }, [authState?.isLoggedIn, authState?.token]);
 
   useEffect(() => {
     const fetchOrderHistory = async () => {
@@ -52,14 +64,6 @@ const OrderHistoryPage = () => {
     fetchOrderHistory();
   }, [authState?.token]);
 
-  const filteredOrders = orders.filter((order) => {
-    if (filter === "all") return true;
-    if (filter === "processing") return order.order_status === "Processing";
-    if (filter === "delivered") return order.order_status === "Delivered";
-    if (filter === "paid") return order.payment_status === "Paid";
-    return true;
-  });
-
   if (loading) {
     return (
       <div
@@ -74,8 +78,52 @@ const OrderHistoryPage = () => {
     );
   }
 
+  if (showAuthModal) {
+    return (
+      <AuthRedirectModal
+        isOpen={true}
+        onClose={() => {
+          // change destination as needed
+          navigate("/", { replace: true });
+        }}
+      />
+    );
+  }
+
+  const filterButtons = [
+    { value: "all", label: "All Orders" },
+    { value: "Waiting for confirmation", label: "Confirmation Pending" },
+    { value: "Confirmed", label: "Confirmed" },
+    { value: "Processing", label: "Processing" },
+    { value: "Shipped", label: "Shipped" },
+    { value: "Delivered", label: "Delivered" },
+    { value: "Cancelled", label: "Cancelled" },
+    { value: "Paid", label: "Paid" },
+    { value: "Pending", label: "Payment Pending" },
+  ];
+
+  const filteredOrders = orders.filter((order) => {
+    if (filter === "all") return true;
+    if (
+      [
+        "Waiting for confirmation",
+        "Confirmed",
+        "Processing",
+        "Shipped",
+        "Delivered",
+        "Cancelled",
+      ].includes(filter)
+    ) {
+      return order.order_status === filter;
+    }
+    if (["Paid", "Pending", "Failed"].includes(filter)) {
+      return order.payment_status === filter;
+    }
+    return true;
+  });
+
   return (
-    <div className="min-h-screen" style={{ background: palette.background }}>
+    <div className="min-h-screen bg-[#F5F7FA] p-6">
       <div className="max-w-5xl mx-auto px-4 py-12">
         <h1
           className="text-4xl font-bold mb-8"
@@ -96,12 +144,7 @@ const OrderHistoryPage = () => {
 
         {/* Filter Buttons */}
         <div className="flex gap-3 mb-8 flex-wrap">
-          {[
-            { value: "all", label: "All Orders" },
-            { value: "processing", label: "Processing" },
-            { value: "delivered", label: "Delivered" },
-            { value: "paid", label: "Paid" },
-          ].map((btn) => (
+          {filterButtons.map((btn) => (
             <button
               key={btn.value}
               onClick={() => setFilter(btn.value)}
@@ -111,7 +154,7 @@ const OrderHistoryPage = () => {
                   filter === btn.value ? palette.accent : palette.white,
                 color: filter === btn.value ? palette.white : palette.primary,
                 border: `2px solid ${
-                  filter === btn.value ? palette.accent : "#E0E0E0"
+                  filter === btn.vealue ? palette.accent : "#E0E0E0"
                 }`,
               }}
             >

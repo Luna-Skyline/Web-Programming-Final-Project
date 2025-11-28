@@ -132,7 +132,7 @@ const CheckoutPage = () => {
   }
 
   return (
-    <div className="min-h-screen" style={{ background: palette.background }}>
+    <div className="min-h-full flex flex-col p-6">
       {loading && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <Loader className="animate-spin text-white" size={48} />

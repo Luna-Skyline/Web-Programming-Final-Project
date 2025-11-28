@@ -1,9 +1,9 @@
 import React from "react";
 import { Users, Target, BookOpen } from "lucide-react";
 
-const AboutUsPage = () => {
+const AboutPage = () => {
   return (
-    <div className="bg-[#F5F3F0] text-[#333333] min-h-screen">
+    <div className="min-h-full flex flex-col p-6">
       <header
         className="bg-cover bg-center h-64"
         style={{
@@ -99,4 +99,4 @@ const AboutUsPage = () => {
   );
 };
 
-export default AboutUsPage;
+export default AboutPage;

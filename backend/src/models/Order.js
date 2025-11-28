@@ -5,8 +5,15 @@ const OrderSchema = new mongoose.Schema({
   order_date: { type: Date, default: Date.now },
   order_status: {
     type: String,
-    enum: ["Pending", "Processing", "Shipped", "Delivered", "Cancelled"],
-    default: "Pending",
+    enum: [
+      "Waiting for confirmation",
+      "Confirmed",
+      "Processing",
+      "Shipped",
+      "Delivered",
+      "Cancelled",
+    ],
+    default: "Waiting for confirmation",
   },
   total_amount: { type: Number, required: true }, //Decimal(12,2)
   payment_status: {

@@ -1,9 +1,28 @@
 import React, { useState, useEffect, useContext } from "react";
 import axios from "axios";
 import { AuthContext } from "../components/AuthContext.jsx";
+import { useNavigate } from "react-router-dom";
+import AuthRedirectModal from "../components/AuthRedirectModal";
 
 const EditProfilePage = () => {
   const { authState, setAuthState } = useContext(AuthContext);
+  const navigate = useNavigate();
+
+  const isAuthenticated =
+    Boolean(authState?.isLoggedIn) ||
+    Boolean(authState?.token) ||
+    Boolean(localStorage.getItem("customerToken")) ||
+    Boolean(localStorage.getItem("authToken"));
+
+  if (!isAuthenticated) {
+    return (
+      <AuthRedirectModal
+        isOpen={true}
+        onClose={() => navigate("/", { replace: true })}
+      />
+    );
+  }
+
   const [formData, setFormData] = useState({
     username: "",
     email: "",

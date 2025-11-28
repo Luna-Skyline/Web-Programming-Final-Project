@@ -52,7 +52,11 @@ const ProductDetailsPage = () => {
           const res = await axios.get(
             `http://localhost:5000/api/products?category_id=${product.category_id._id}&limit=5`
           );
-          setRecommendations(res.data.filter((p) => p._id !== product._id));
+          // backend may return { items, totalCount } or an array
+          const recItems = Array.isArray(res.data)
+            ? res.data
+            : res.data?.items ?? [];
+          setRecommendations(recItems.filter((p) => p._id !== product._id));
         } catch (err) {
           console.error("Failed to fetch recommendations.", err);
         }
@@ -104,7 +108,7 @@ const ProductDetailsPage = () => {
 
   if (loading) {
     return (
-      <div className="flex justify-center items-center h-screen bg-[#F5F3F0]">
+      <div className="flex justify-center items-center min-h-full">
         <Loader className="animate-spin w-12 h-12 text-[#1F3B6D]" />
       </div>
     );
@@ -133,7 +137,7 @@ const ProductDetailsPage = () => {
   const supplierName = product.supplier_id?.supplier_name ?? "N/A";
 
   return (
-    <div className="min-h-screen bg-[#F5F3F0] p-8">
+    <div className="min-h-full flex flex-col p-6">
       <AuthRedirectModal
         isOpen={isAuthModalOpen}
         onClose={() => setIsAuthModalOpen(false)}
@@ -278,7 +282,7 @@ const ProductCard = ({ product }) => {
       <h3 className="font-bold text-lg">{product.product_name}</h3>
       <p className="text-gray-500">{product.author}</p>
       <p className="font-bold text-[#4A90E2] mt-2">
-        ${product.unit_price.toFixed(2)}
+        ${product.unit_price?.toFixed(2) ?? "0.00"}
       </p>
     </Link>
   );

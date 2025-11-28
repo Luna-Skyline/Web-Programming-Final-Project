@@ -15,7 +15,7 @@ import CartPage from "./pages/CartPage.jsx";
 import CheckoutPage from "./pages/CheckoutPage.jsx";
 import OrderStatusPage from "./pages/OrderStatusPage.jsx";
 import OrderHistoryPage from "./pages/OrderHistoryPage.jsx";
-import Footer from "./components/Footer.jsx";
+import Footer from "./components/Footer";
 
 const App = () => {
   return (
@@ -24,24 +24,27 @@ const App = () => {
         <Router>
           <NavBar />
 
-          <div className="min-h-[calc(100vh-64px)] flex flex-col">
-            <Routes>
-              <Route path="/" element={<HomePage />} />
-              <Route path="/browse" element={<BrowseBooksPage />} />
-              <Route path="/about" element={<AboutPage />} />
-              <Route path="/contact" element={<ContactPage />} />
-              <Route path="/cart" element={<CartPage />} />
-              <Route path="/checkout" element={<CheckoutPage />} />
-              <Route
-                path="/order-status/:orderId"
-                element={<OrderStatusPage />}
-              />
-              <Route path="/order-history" element={<OrderHistoryPage />} />
-              <Route path="/edit-profile" element={<EditProfilePage />} />
-              <Route path="/login" element={<LoginPage />} />
-              <Route path="/register" element={<RegisterPage />} />
-              <Route path="/product/:id" element={<ProductDetailsPage />} />
-            </Routes>
+          <div className="min-h-screen flex flex-col">
+            {/* main fills available space, can shrink, and provides page background */}
+            <main className="flex-1 min-h-0 bg-[#F5F7FA]">
+              <Routes>
+                <Route path="/" element={<HomePage />} />
+                <Route path="/browse" element={<BrowseBooksPage />} />
+                <Route path="/about" element={<AboutPage />} />
+                <Route path="/contact" element={<ContactPage />} />
+                <Route path="/cart" element={<CartPage />} />
+                <Route path="/checkout" element={<CheckoutPage />} />
+                <Route
+                  path="/order-status/:orderId"
+                  element={<OrderStatusPage />}
+                />
+                <Route path="/order-history" element={<OrderHistoryPage />} />
+                <Route path="/edit-profile" element={<EditProfilePage />} />
+                <Route path="/login" element={<LoginPage />} />
+                <Route path="/register" element={<RegisterPage />} />
+                <Route path="/product/:id" element={<ProductDetailsPage />} />
+              </Routes>
+            </main>
 
             <Footer />
           </div>

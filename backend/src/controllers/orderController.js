@@ -44,15 +44,18 @@ export const placeOrder = async (req, res) => {
       });
     }
 
-    //Create order
+    // Determine payment status based on payment method
+    const payment_status = payment_method === "cod" ? "Pending" : "Paid";
+
+    // Create order
     const newOrder = await Order.create({
       customer_id: customerId,
       order_date: new Date(),
       shipping_address,
       total_amount: totalAmount,
       payment_method: payment_method || "Not Specified",
-      payment_status: "Paid", //Assuming payment is successful
-      order_status: "Processing",
+      payment_status: payment_status,
+      order_status: "Waiting for confirmation", // Initial status
     });
 
     //Create order details

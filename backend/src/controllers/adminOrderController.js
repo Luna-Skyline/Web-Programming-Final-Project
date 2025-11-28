@@ -17,6 +17,14 @@ export const processOrder = async (req, res) => {
     if (order_status) order.order_status = order_status;
     if (payment_status) order.payment_status = payment_status;
 
+    // If order is delivered and payment method is COD, mark as paid
+    if (
+      order.order_status === "Delivered" &&
+      order.payment_method === "cod"
+    ) {
+      order.payment_status = "Paid";
+    }
+
     await order.save();
 
     res.status(200).json({ message: "Order updated successfully", order });

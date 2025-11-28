@@ -44,9 +44,9 @@ const HomePage = () => {
           ]
         );
 
-        setFeaturedBooks(featuredRes.data);
-        setBestsellers(bestsellersRes.data);
-        setNewArrivals(newArrivalsRes.data);
+        setFeaturedBooks(featuredRes.data.items || []);
+        setBestsellers(bestsellersRes.data.items || []);
+        setNewArrivals(newArrivalsRes.data.items || []);
       } catch (err) {
         console.error("Error fetching books:", err);
       } finally {
@@ -78,7 +78,7 @@ const HomePage = () => {
   );
 
   return (
-    <div className="min-h-screen bg-[#F5F3F0] p-6">
+    <div className="min-h-full flex flex-col p-6">
       <header className="text-center my-12">
         <h1 className="text-5xl font-extrabold text-[#1F3B6D] mb-4">
           Your Next Adventure Awaits

@@ -13,18 +13,33 @@ const OrderCard = ({ order, onViewDetails }) => {
   const getStatusColor = (status) => {
     switch (status) {
       case "Delivered":
-        return "#10B981";
-      case "Processing":
-        return "#F59E0B";
+        return "#10B981"; // Green
       case "Shipped":
-        return "#3B82F6";
+        return "#3B82F6"; // Blue
+      case "Processing":
+        return "#F59E0B"; // Amber
+      case "Confirmed":
+        return "#8B5CF6"; // Violet
+      case "Waiting for confirmation":
+        return "#757575"; // Gray
+      case "Cancelled":
+        return "#EF4444"; // Red
       default:
         return palette.gray;
     }
   };
 
   const getPaymentStatusColor = (status) => {
-    return status === "Paid" ? "#10B981" : "#F59E0B";
+    switch (status) {
+      case "Paid":
+        return "#10B981"; // Green
+      case "Pending":
+        return "#F59E0B"; // Amber
+      case "Failed":
+        return "#EF4444"; // Red
+      default:
+        return palette.gray;
+    }
   };
 
   return (

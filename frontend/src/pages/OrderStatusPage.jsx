@@ -1,17 +1,46 @@
 import React, { useState, useEffect, useContext } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { Loader, Clock, Truck, Home, AlertCircle } from "lucide-react";
+import {
+  Loader,
+  Clock,
+  Truck,
+  Home,
+  AlertCircle,
+  CheckCircle,
+  HelpCircle,
+  XCircle,
+} from "lucide-react";
 import axios from "axios";
 import { AuthContext } from "../components/AuthContext";
 import OrderItem from "../components/OrderItem";
+import AuthRedirectModal from "../components/AuthRedirectModal";
 
 const OrderStatusPage = () => {
   const { orderId } = useParams();
   const { authState } = useContext(AuthContext);
   const navigate = useNavigate();
+
+  // Authentication check like EditProfilePage
+  const isAuthenticated =
+    Boolean(authState?.isLoggedIn) ||
+    Boolean(authState?.token) ||
+    Boolean(localStorage.getItem("customerToken")) ||
+    Boolean(localStorage.getItem("authToken"));
+
+  if (!isAuthenticated) {
+    return (
+      <AuthRedirectModal
+        isOpen={true}
+        onClose={() => navigate("/", { replace: true })}
+      />
+    );
+  }
+
   const [order, setOrder] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 5;
 
   const palette = {
     primary: "#0F1E3D",
@@ -22,22 +51,40 @@ const OrderStatusPage = () => {
   };
 
   const statusSteps = [
+    {
+      key: "Waiting for confirmation",
+      label: "Confirmation Pending",
+      icon: HelpCircle,
+    },
+    { key: "Confirmed", label: "Confirmed", icon: CheckCircle },
     { key: "Processing", label: "Processing", icon: Clock },
     { key: "Shipped", label: "Shipped", icon: Truck },
     { key: "Delivered", label: "Delivered", icon: Home },
   ];
 
+  const getPaymentStatusColor = (status) => {
+    switch (status) {
+      case "Paid":
+        return "#10B981";
+      case "Pending":
+        return "#F59E0B";
+      case "Failed":
+        return "#EF4444";
+      default:
+        return palette.gray;
+    }
+  };
+
   useEffect(() => {
     const fetchOrderDetails = async () => {
       setLoading(true);
       try {
-        const token = authState?.token || localStorage.getItem("customerToken"); // use correct key
+        const token = authState?.token || localStorage.getItem("customerToken");
         if (!token) {
-          setError("You must be logged in to view this order.");
+          setError("");
           setLoading(false);
           return;
         }
-
         const headers = { Authorization: `Bearer ${token}` };
         const response = await axios.get(
           `http://localhost:5000/api/orders/${orderId}`,
@@ -58,34 +105,33 @@ const OrderStatusPage = () => {
     if (orderId) fetchOrderDetails();
   }, [orderId, authState?.token]);
 
-  if (loading) {
+  if (loading)
     return (
       <div
         className="flex justify-center items-center h-screen"
         style={{ background: palette.background }}
       >
         <Loader
-          className="animate-spin w-12 h-12"
+          className="animate-spin w-16 h-16"
           style={{ color: palette.primary }}
         />
       </div>
     );
-  }
 
-  if (error) {
+  if (error)
     return (
       <div className="min-h-screen" style={{ background: palette.background }}>
-        <div className="max-w-5xl mx-auto px-4 py-12">
+        <div className="max-w-5xl mx-auto px-8 py-16">
           <div
-            className="flex gap-3 p-4 rounded-lg"
+            className="flex gap-3 p-8 rounded-lg"
             style={{ background: "#FFE5E5", color: palette.accent }}
           >
-            <AlertCircle size={20} />
-            <p>{error}</p>
+            <AlertCircle size={24} />
+            <p className="text-lg">{error}</p>
           </div>
           <button
             onClick={() => navigate("/order-history")}
-            className="mt-6 px-6 py-3 text-white rounded-lg font-semibold"
+            className="mt-8 px-8 py-4 text-white rounded-lg font-bold"
             style={{ background: palette.primary }}
           >
             Back to Orders
@@ -93,18 +139,17 @@ const OrderStatusPage = () => {
         </div>
       </div>
     );
-  }
 
-  if (!order) {
+  if (!order)
     return (
       <div className="min-h-screen" style={{ background: palette.background }}>
-        <div className="max-w-5xl mx-auto px-4 py-12 text-center">
-          <p style={{ color: palette.gray }} className="text-lg mb-6">
+        <div className="max-w-5xl mx-auto px-8 py-16 text-center">
+          <p style={{ color: palette.gray }} className="text-xl mb-8">
             Order not found
           </p>
           <button
             onClick={() => navigate("/order-history")}
-            className="px-6 py-3 text-white rounded-lg font-semibold"
+            className="px-8 py-4 text-white rounded-lg font-bold"
             style={{ background: palette.primary }}
           >
             Back to Orders
@@ -112,7 +157,6 @@ const OrderStatusPage = () => {
         </div>
       </div>
     );
-  }
 
   const currentStatusIndex = statusSteps.findIndex(
     (s) => s.key === order.order_status
@@ -122,185 +166,251 @@ const OrderStatusPage = () => {
     0
   );
 
+  const totalPages = Math.ceil(order.orderDetails.length / itemsPerPage);
+  const paginatedItems = order.orderDetails.slice(
+    (currentPage - 1) * itemsPerPage,
+    currentPage * itemsPerPage
+  );
+
   return (
-    <div className="min-h-screen" style={{ background: palette.background }}>
-      <div className="max-w-5xl mx-auto px-4 py-12">
+    <div className="min-h-full flex flex-col p-8">
+      <div className="max-w-7xl mx-auto px-8 py-16">
         <h1
-          className="text-4xl font-bold mb-8"
+          className="text-5xl font-extrabold mb-12"
           style={{ color: palette.primary }}
         >
           Order Tracking
         </h1>
 
-        {/* Order Header */}
-        <div
-          className="rounded-lg shadow-md p-6 mb-8"
-          style={{ background: palette.white }}
-        >
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div>
-              <p style={{ color: palette.gray }} className="text-sm mb-1">
-                Order ID
-              </p>
-              <p
-                className="text-lg font-bold"
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
+          {/* Left Column */}
+          <div className="space-y-12">
+            {/* Order Header + Shipping */}
+            <div
+              className="rounded-lg shadow-lg p-10"
+              style={{ background: palette.white }}
+            >
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                <div>
+                  <p style={{ color: palette.gray }} className="text-lg mb-2">
+                    Order ID
+                  </p>
+                  <p
+                    className="text-2xl font-bold"
+                    style={{ color: palette.primary }}
+                  >
+                    #{order._id.slice(0, 12)}...
+                  </p>
+                </div>
+                <div>
+                  <p style={{ color: palette.gray }} className="text-lg mb-2">
+                    Order Date
+                  </p>
+                  <p
+                    className="text-2xl font-bold"
+                    style={{ color: palette.primary }}
+                  >
+                    {new Date(order.order_date).toLocaleDateString()}
+                  </p>
+                </div>
+                <div>
+                  <p style={{ color: palette.gray }} className="text-lg mb-2">
+                    Payment Status
+                  </p>
+                  <p
+                    className="text-2xl font-bold"
+                    style={{
+                      color: getPaymentStatusColor(order.payment_status),
+                    }}
+                  >
+                    {order.payment_status}
+                  </p>
+                </div>
+                <div>
+                  <p style={{ color: palette.gray }} className="text-lg mb-2">
+                    Total Amount
+                  </p>
+                  <p
+                    className="text-2xl font-bold"
+                    style={{ color: palette.accent }}
+                  >
+                    ${order.total_amount?.toFixed(2)}
+                  </p>
+                </div>
+                <div className="sm:col-span-2">
+                  <p
+                    className="text-lg mb-2 font-semibold"
+                    style={{ color: palette.gray }}
+                  >
+                    Shipping Address
+                  </p>
+                  <p
+                    className="text-lg font-bold"
+                    style={{ color: palette.primary }}
+                  >
+                    {order.shipping_address}
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* Order Items */}
+            <div
+              className="rounded-lg shadow-lg p-10"
+              style={{ background: palette.white }}
+            >
+              <h2
+                className="text-3xl font-bold mb-8"
                 style={{ color: palette.primary }}
               >
-                #{order._id}
-              </p>
-            </div>
-            <div>
-              <p style={{ color: palette.gray }} className="text-sm mb-1">
-                Order Date
-              </p>
-              <p
-                className="text-lg font-bold"
-                style={{ color: palette.primary }}
-              >
-                {new Date(order.order_date).toLocaleDateString()}
-              </p>
-            </div>
-            <div>
-              <p style={{ color: palette.gray }} className="text-sm mb-1">
-                Payment Status
-              </p>
-              <p
-                className="text-lg font-bold"
-                style={{
-                  color:
-                    order.payment_status === "Paid"
-                      ? "#10B981"
-                      : palette.accent,
-                }}
-              >
-                {order.payment_status}
-              </p>
-            </div>
-            <div>
-              <p style={{ color: palette.gray }} className="text-sm mb-1">
-                Total Amount
-              </p>
-              <p
-                className="text-lg font-bold"
-                style={{ color: palette.accent }}
-              >
-                ${order.total_amount?.toFixed(2)}
-              </p>
+                Order Items
+              </h2>
+              <div className="space-y-6">
+                {paginatedItems.map((item) => (
+                  <OrderItem key={item._id} item={item} />
+                ))}
+              </div>
+              {totalPages > 1 && (
+                <div className="flex justify-center mt-6 space-x-4">
+                  <button
+                    disabled={currentPage === 1}
+                    onClick={() => setCurrentPage(currentPage - 1)}
+                    className="px-4 py-2 rounded-lg border"
+                  >
+                    Prev
+                  </button>
+                  <span className="px-4 py-2">
+                    Page {currentPage} of {totalPages}
+                  </span>
+                  <button
+                    disabled={currentPage === totalPages}
+                    onClick={() => setCurrentPage(currentPage + 1)}
+                    className="px-4 py-2 rounded-lg border"
+                  >
+                    Next
+                  </button>
+                </div>
+              )}
             </div>
           </div>
-        </div>
 
-        {/* Status Timeline */}
-        <div
-          className="rounded-lg shadow-md p-6 mb-8"
-          style={{ background: palette.white }}
-        >
-          <h2
-            className="text-2xl font-bold mb-8"
-            style={{ color: palette.primary }}
-          >
-            Order Status
-          </h2>
-          <div className="flex justify-between items-center mb-8">
-            {statusSteps.map((step, index) => {
-              const isCompleted = index <= currentStatusIndex;
-              const IconComponent = step.icon;
-              return (
-                <div
-                  key={step.key}
-                  className="flex-1 flex flex-col items-center"
+          {/* Right Column */}
+          <div className="space-y-12 sticky top-32">
+            {order.order_status === "Cancelled" ? (
+              <div
+                className="rounded-lg shadow-lg p-10 flex flex-col items-center"
+                style={{ background: "#FFF0F0" }}
+              >
+                <XCircle size={64} color="#D8000C" />
+                <h2
+                  className="text-3xl font-bold mt-6"
+                  style={{ color: "#D8000C" }}
                 >
+                  Order Cancelled
+                </h2>
+                <p className="mt-4 text-lg" style={{ color: palette.gray }}>
+                  This order has been cancelled.
+                </p>
+              </div>
+            ) : (
+              <div
+                className="rounded-lg shadow-lg p-10"
+                style={{ background: palette.white }}
+              >
+                <h2
+                  className="text-3xl font-bold mb-10"
+                  style={{ color: palette.primary }}
+                >
+                  Order Status
+                </h2>
+                <div className="flex justify-between items-start mb-10 relative">
                   <div
-                    className="w-12 h-12 rounded-full flex items-center justify-center mb-3 transition-all"
+                    className="absolute top-1/2 left-0 w-full h-2"
                     style={{
-                      background: isCompleted ? palette.accent : "#E0E0E0",
+                      transform: "translateY(-50%)",
+                      backgroundColor: "#E0E0E0",
                     }}
                   >
-                    <IconComponent
-                      size={24}
-                      color={isCompleted ? palette.white : palette.gray}
-                    />
-                  </div>
-                  <p
-                    className="text-sm font-semibold text-center"
-                    style={{
-                      color: isCompleted ? palette.primary : palette.gray,
-                    }}
-                  >
-                    {step.label}
-                  </p>
-                  {index < statusSteps.length - 1 && (
                     <div
-                      className="h-1 flex-1 mt-3"
+                      className="h-full"
                       style={{
-                        background: isCompleted ? palette.accent : "#E0E0E0",
+                        width: `${
+                          (currentStatusIndex / (statusSteps.length - 1)) * 100
+                        }%`,
+                        backgroundColor: palette.accent,
+                        transition: "width 0.3s ease",
                       }}
                     />
-                  )}
+                  </div>
+                  {statusSteps.map((step, index) => {
+                    const isCompleted = index <= currentStatusIndex;
+                    const IconComponent = step.icon;
+                    return (
+                      <div
+                        key={step.key}
+                        className="flex flex-col items-center z-10"
+                        style={{ flex: "1 1 0" }}
+                      >
+                        <div
+                          className="w-16 h-16 rounded-full flex items-center justify-center mb-2"
+                          style={{
+                            background: isCompleted
+                              ? palette.accent
+                              : "#E0E0E0",
+                            border: `6px solid ${palette.white}`,
+                          }}
+                        >
+                          <IconComponent
+                            size={32}
+                            color={isCompleted ? palette.white : palette.gray}
+                          />
+                        </div>
+                        <p
+                          className="text-sm font-semibold text-center"
+                          style={{
+                            color: isCompleted ? palette.primary : palette.gray,
+                          }}
+                        >
+                          {step.label}
+                        </p>
+                      </div>
+                    );
+                  })}
                 </div>
-              );
-            })}
-          </div>
-          <p
-            className="text-center text-lg font-semibold"
-            style={{ color: palette.primary }}
-          >
-            Current Status:{" "}
-            <span style={{ color: palette.accent }}>{order.order_status}</span>
-          </p>
-        </div>
+                <p
+                  className="text-center text-xl font-bold"
+                  style={{ color: palette.primary }}
+                >
+                  Current Status:{" "}
+                  <span style={{ color: palette.accent }}>
+                    {order.order_status}
+                  </span>
+                </p>
+              </div>
+            )}
 
-        {/* Shipping Address */}
-        <div
-          className="rounded-lg shadow-md p-6 mb-8"
-          style={{ background: palette.white }}
-        >
-          <h2
-            className="text-2xl font-bold mb-4"
-            style={{ color: palette.primary }}
-          >
-            Shipping Address
-          </h2>
-          <p style={{ color: palette.gray }}>{order.shipping_address}</p>
-        </div>
-
-        {/* Order Items */}
-        <div
-          className="rounded-lg shadow-md p-6"
-          style={{ background: palette.white }}
-        >
-          <h2
-            className="text-2xl font-bold mb-6"
-            style={{ color: palette.primary }}
-          >
-            Order Items
-          </h2>
-          <div className="space-y-4">
-            {order.orderDetails?.map((item) => (
-              <OrderItem key={item._id} item={item} />
-            ))}
-          </div>
-
-          <div
-            className="mt-6 pt-6 border-t"
-            style={{ borderColor: "#E0E0E0" }}
-          >
-            <div className="flex justify-between text-lg font-bold mb-4">
-              <span style={{ color: palette.primary }}>Subtotal:</span>
-              <span>${subtotal.toFixed(2)}</span>
-            </div>
-            <div className="flex justify-between text-2xl font-bold">
-              <span style={{ color: palette.primary }}>Total:</span>
-              <span style={{ color: palette.accent }}>
-                ${order.total_amount?.toFixed(2)}
-              </span>
+            {/* Subtotal / Total */}
+            <div
+              className="rounded-lg shadow-lg p-10"
+              style={{ background: palette.white }}
+            >
+              <div className="flex justify-between text-xl font-bold mb-4">
+                <span style={{ color: palette.primary }}>Subtotal:</span>
+                <span>${subtotal.toFixed(2)}</span>
+              </div>
+              <div className="flex justify-between text-3xl font-bold">
+                <span style={{ color: palette.primary }}>Total:</span>
+                <span style={{ color: palette.accent }}>
+                  ${order.total_amount?.toFixed(2)}
+                </span>
+              </div>
             </div>
           </div>
         </div>
 
         <button
           onClick={() => navigate("/order-history")}
-          className="mt-8 px-6 py-3 text-white rounded-lg font-semibold hover:opacity-90"
+          className="mt-12 px-10 py-5 text-white rounded-lg font-bold hover:opacity-90"
           style={{ background: palette.primary }}
         >
           Back to Order History
