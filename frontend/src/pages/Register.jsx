@@ -1,11 +1,11 @@
 import React, { useState, useContext } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
-import { AuthContext } from "../components/AuthContext.jsx";
+import { AuthContext } from "../components/CustomerAuthContext.jsx";
 
 const RegisterPage = () => {
   const navigate = useNavigate();
-  const { setAuthState } = useContext(AuthContext);
+  const { login } = useContext(AuthContext);
 
   const [formData, setFormData] = useState({
     username: "",

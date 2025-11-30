@@ -18,36 +18,48 @@ export const createProduct = async (req, res) => {
       number_of_pages,
       publication_year,
       format,
-      initial_stock_quantity,
+      image_url,
+      stock_quantity,
       reorder_level,
       max_stock_level,
     } = req.body;
 
-    // Create product
-    const newProduct = await Product.create({
+    // Check for duplicate product name
+    const existingProduct = await Product.findOne({ product_name });
+    if (existingProduct) {
+      return res
+        .status(400)
+        .json({ message: "Product with this name already exists." });
+    }
+
+    const productData = {
       product_name,
       description,
       author,
       publisher,
-      isbn,
-      category_id,
-      supplier_id,
+      isbn: isbn || null,
+      category_id: category_id || null,
+      supplier_id: supplier_id || null,
       unit_price,
       cost_price,
       language,
-      number_of_pages,
-      publication_year,
+      number_of_pages: number_of_pages || null,
+      publication_year: publication_year || null,
       format,
+      image_url: image_url || null,
       is_active: true,
-    });
+    };
+
+    // Create product
+    const newProduct = await Product.create(productData);
 
     // Create inventory record
     await Inventory.create({
       product_id: newProduct._id,
-      stock_quantity: initial_stock_quantity || 0,
+      stock_quantity: stock_quantity || 0,
       reorder_level: reorder_level || 10,
       max_stock_level: max_stock_level || null,
-      last_restocked: initial_stock_quantity ? new Date() : null,
+      last_restocked: stock_quantity ? new Date() : null,
     });
 
     res
@@ -63,6 +75,7 @@ export const createProduct = async (req, res) => {
 export const getAllProducts = async (req, res) => {
   try {
     const products = await Product.find()
+      .sort({ created_at: -1 })
       .populate("category_id", "category_name genre")
       .populate(
         "supplier_id",

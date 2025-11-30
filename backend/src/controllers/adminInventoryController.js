@@ -34,7 +34,8 @@ export const createInventory = async (req, res) => {
 export const getAllInventory = async (req, res) => {
   try {
     const inventoryList = await Inventory.find()
-      .populate("product_id", "product_name author unit_price")
+      .sort({ created_at: -1 })
+      .populate("product_id", "product_name author unit_price image_url")
       .lean();
 
     res.status(200).json(inventoryList);
@@ -50,7 +51,7 @@ export const getInventoryById = async (req, res) => {
     const inventoryId = req.params.id;
 
     const inventory = await Inventory.findById(inventoryId)
-      .populate("product_id", "product_name author unit_price")
+      .populate("product_id", "product_name author unit_price image_url")
       .lean();
     if (!inventory) {
       return res.status(404).json({ message: "Inventory record not found" });

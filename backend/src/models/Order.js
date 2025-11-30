@@ -23,6 +23,7 @@ const OrderSchema = new mongoose.Schema({
   },
   payment_method: { type: String, maxlength: 50 },
   shipping_address: { type: String },
+  stock_adjusted: { type: Boolean, default: false },
   updated_at: { type: Date, default: Date.now },
 });
 OrderSchema.pre("save", function () {

@@ -1,10 +1,11 @@
 import React, { createContext, useState, useEffect } from "react";
 import axios from "axios";
+import { useNavigate } from "react-router-dom";
 
 // Create context
 export const AuthContext = createContext();
 
-// Provider component
+  // Provider component
 export const AuthProvider = ({ children }) => {
   const [authState, setAuthState] = useState({
     isLoggedIn: false,
@@ -13,6 +14,7 @@ export const AuthProvider = ({ children }) => {
   });
 
   const [loading, setLoading] = useState(true);
+  const navigate = useNavigate();
 
   // On mount, check localStorage for existing auth info
   useEffect(() => {
@@ -30,8 +32,25 @@ export const AuthProvider = ({ children }) => {
     }
 
     setLoading(false);
-  }, []);
 
+    // Axios Interceptor for token expiration
+    const interceptor = axios.interceptors.response.use(
+      (response) => response,
+      (error) => {
+        if (error.response && (error.response.status === 401 || error.response.status === 403 || (error.response.data && error.response.data.message && error.response.data.message.includes("jwt expired")))) {
+          // Token expired or invalid, log out the user
+          logout();
+          navigate("/login"); // Redirect to your login page
+        }
+        return Promise.reject(error);
+      }
+    );
+
+    // Clean up interceptor on component unmount
+    return () => {
+      axios.interceptors.response.eject(interceptor);
+    };
+  }, []);
   // Login function
   const login = (userData, token) => {
     setAuthState({

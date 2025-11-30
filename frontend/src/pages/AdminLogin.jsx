@@ -1,19 +1,19 @@
 import React, { useState, useContext } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import axios from "axios";
-import { AuthContext } from "../components/CustomerAuthContext.jsx";
+import { AdminAuthContext } from "../components/AdminAuthContext.jsx";
 
-const Login = () => {
-  const { login } = useContext(AuthContext);
-  const [emailOrUsername, setEmailOrUsername] = useState("");
+const AdminLogin = () => {
+  const { login } = useContext(AdminAuthContext);
+  const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
   const validateInput = () => {
-    if (!emailOrUsername.trim()) {
-      setError("Please enter your email or username.");
+    if (!email.trim()) {
+      setError("Please enter your email.");
       return false;
     }
     if (!password) {
@@ -21,7 +21,7 @@ const Login = () => {
       return false;
     }
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (emailOrUsername.includes("@") && !emailRegex.test(emailOrUsername)) {
+    if (!emailRegex.test(email)) {
       setError("Please enter a valid email address.");
       return false;
     }
@@ -38,22 +38,22 @@ const Login = () => {
 
     try {
       const response = await axios.post(
-        "http://localhost:5000/api/customers/login",
-        { username: emailOrUsername, email: emailOrUsername, password },
+        "http://localhost:5000/api/admin/login",
+        { credential: email, password },
         { withCredentials: true }
       );
 
-      const customer = response.data.customer;
+      const admin = response.data.admin;
       const token = response.data.token;
 
-      login(customer, token);
+      login(admin, token);
 
-      navigate("/");
+      navigate("/admin-panel");
     } catch (err) {
       console.error(err);
 
       if (err.response?.status === 404) {
-        setError("No account found with that email/username.");
+        setError("No admin account found with that email.");
       } else if (err.response?.status === 401) {
         setError("Incorrect password. Please try again.");
       } else if (err.response?.data?.message) {
@@ -72,7 +72,7 @@ const Login = () => {
     <div className="min-h-screen flex items-center justify-center bg-[#F5F7FA] px-4">
       <div className="max-w-md w-full bg-white rounded-xl shadow-lg p-8">
         <h2 className="text-3xl font-bold text-[#0F1E3D] mb-6 text-center">
-          BookHub Login
+          BookHub Admin Login
         </h2>
 
         {error && (
@@ -83,10 +83,10 @@ const Login = () => {
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <input
-            type="text"
-            placeholder="Email or Username"
-            value={emailOrUsername}
-            onChange={(e) => setEmailOrUsername(e.target.value)}
+            type="email"
+            placeholder="Email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
             className="w-full px-4 py-2 border border-[#E0E0E0] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#33A6B8] transition-colors"
             required
           />
@@ -106,23 +106,13 @@ const Login = () => {
             {loading ? "Logging in..." : "Login"}
           </button>
         </form>
-
         <p className="mt-4 text-sm text-[#4A4A4A] text-center">
-          Don’t have an account?{" "}
+          Go back to customer{" "}
           <Link
-            to="/register"
+            to="/login"
             className="text-[#33A6B8] hover:text-[#0F3B60] font-medium transition-colors"
           >
-            Register
-          </Link>
-        </p>
-        <p className="mt-2 text-sm text-[#4A4A4A] text-center">
-          Login as Admin/Manager?{" "}
-          <Link
-            to="/admin/login"
-            className="text-[#33A6B8] hover:text-[#0F3B60] font-medium transition-colors"
-          >
-            Click here
+            Login
           </Link>
         </p>
       </div>
@@ -130,4 +120,4 @@ const Login = () => {
   );
 };
 
-export default Login;
+export default AdminLogin;

@@ -2,7 +2,7 @@ import React, { useState, useEffect, useContext } from "react";
 import { useNavigate } from "react-router-dom";
 import { Loader, AlertCircle } from "lucide-react";
 import axios from "axios";
-import { AuthContext } from "../components/AuthContext";
+import { AuthContext } from "../components/CustomerAuthContext";
 import OrderCard from "../components/OrderCard";
 import AuthRedirectModal from "../components/AuthRedirectModal";
 

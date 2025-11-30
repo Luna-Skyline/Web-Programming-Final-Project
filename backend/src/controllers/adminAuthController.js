@@ -5,25 +5,28 @@ import jwt from "jsonwebtoken";
 // Admin login
 export const loginAdmin = async (req, res) => {
   try {
-    const { username, email, password } = req.body;
+    const { credential, password } = req.body;
 
     // Basic validation
-    if ((!username && !email) || !password) {
+    if (!credential || !password) {
       return res
         .status(400)
         .json({ message: "Username or Email and Password are required." });
     }
 
-    // Find admin by username or email
-    const admin = await AdminUser.findOne({ $or: [{ username }, { email }] });
+    // Find admin by username OR email
+    const admin = await AdminUser.findOne({
+      $or: [{ username: credential }, { email: credential }],
+    });
+
     if (!admin) {
-      return res.status(400).json({ message: "Invalid credentials." });
+      return res.status(404).json({ message: "No admin account found." });
     }
 
     // Compare password
     const isMatch = await bcrypt.compare(password, admin.password_hash);
     if (!isMatch) {
-      return res.status(400).json({ message: "Invalid credentials." });
+      return res.status(401).json({ message: "Incorrect password." });
     }
 
     // Create JWT token

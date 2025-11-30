@@ -64,12 +64,6 @@ export const placeOrder = async (req, res) => {
         order_id: newOrder._id,
         ...detail,
       });
-
-      // Update inventory
-      await Inventory.findOneAndUpdate(
-        { product_id: detail.product_id },
-        { $inc: { stock_quantity: -detail.quantity } }
-      );
     }
     res.status(201).json({
       message: "Order placed successfully.",

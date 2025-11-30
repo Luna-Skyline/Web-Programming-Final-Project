@@ -1,11 +1,11 @@
 import React, { useState, useEffect, useContext } from "react";
 import axios from "axios";
-import { AuthContext } from "../components/AuthContext.jsx";
+import { AuthContext } from "../components/CustomerAuthContext.jsx";
 import { useNavigate } from "react-router-dom";
 import AuthRedirectModal from "../components/AuthRedirectModal";
 
 const EditProfilePage = () => {
-  const { authState, setAuthState } = useContext(AuthContext);
+  const { authState, logout } = useContext(AuthContext);
   const navigate = useNavigate();
 
   const isAuthenticated =

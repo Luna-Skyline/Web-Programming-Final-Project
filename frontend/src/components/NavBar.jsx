@@ -10,9 +10,11 @@ import {
   Settings,
   LogOut,
   History,
+  Shield, // Import Shield icon
 } from "lucide-react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import { AuthContext } from "../components/AuthContext.jsx";
+import { AuthContext } from "../components/CustomerAuthContext.jsx";
+import { AdminAuthContext } from "../components/AdminAuthContext.jsx";
 import { useCart } from "./CartContext.jsx";
 import axios from "axios";
 
@@ -24,15 +26,30 @@ const navLinks = [
 ];
 
 const NavBar = () => {
-  const { authState, logout } = useContext(AuthContext);
+  const { authState: customerAuthState, logout: customerLogout } =
+    useContext(AuthContext);
+  const { authState: adminAuthState, logout: adminLogout } =
+    useContext(AdminAuthContext);
   const { cartItems } = useCart();
-  const { isLoggedIn, user } = authState;
+
+  // Determine which auth state is active
+  const currentAuthState = adminAuthState.isLoggedIn
+    ? adminAuthState
+    : customerAuthState;
+  const currentLogout = adminAuthState.isLoggedIn
+    ? adminLogout
+    : customerLogout;
+
+  const { isLoggedIn, user } = currentAuthState;
+  const userRole = user?.role;
+  const isAdmin = userRole === "admin" || userRole === "manager";
+
+  const navigate = useNavigate(); // Initialize navigate hook
+
+  const [showNavbar, setShowNavbar] = useState(true);
   const [isOpen, setIsOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
   const [categoriesByGenre, setCategoriesByGenre] = useState({});
-  const navigate = useNavigate();
-  const location = useLocation();
-  const [showNavbar, setShowNavbar] = useState(true);
 
   useEffect(() => {
     const fetchCategories = async () => {
@@ -74,7 +91,7 @@ const NavBar = () => {
   }, []);
 
   const onLogoutClick = () => {
-    logout();
+    currentLogout();
     setProfileOpen(false);
     setIsOpen(false);
     navigate("/");
@@ -85,6 +102,10 @@ const NavBar = () => {
       return (
         location.pathname === path || location.pathname.startsWith("/product/")
       );
+    }
+    // Make admin link active for all admin pages
+    if (path === "/admin-panel") {
+      return location.pathname.startsWith("/admin");
     }
     return location.pathname === path;
   };
@@ -145,43 +166,52 @@ const NavBar = () => {
                 {link.name}
               </Link>
             ))}
+            {isAdmin && (
+              <Link
+                to="/admin-panel"
+                className={`flex items-center font-medium transition-colors navbar-link ${
+                  isActive("/admin-panel")
+                    ? "border-b-2 navbar-link-active"
+                    : "hover:opacity-80"
+                }`}
+                style={{
+                  borderColor: isActive("/admin-panel")
+                    ? palette.hover
+                    : "transparent",
+                }}
+              >
+                <Shield className="w-4 h-4 mr-1" />
+                Admin
+              </Link>
+            )}
           </nav>
 
           {/* Right: Cart & Profile */}
           <div className="flex items-center space-x-4">
             {/* Cart Icon */}
-            <Link
-              to="/cart"
-              className="relative transition-colors icon-link"
-              style={{
-                color:
-                  location.pathname === "/cart" ? palette.hover : palette.white,
-              }}
-            >
-              <ShoppingCart size={24} />
-              {isLoggedIn && cartItems.length > 0 && (
-                <span
-                  className="absolute -top-2 -right-2 text-white rounded-full text-xs w-4 h-4 flex items-center justify-center"
-                  style={{ background: palette.accent }}
-                >
-                  {cartItems.length}
-                </span>
-              )}
-            </Link>
+            {!isAdmin && (
+              <Link
+                to="/cart"
+                className="relative transition-colors icon-link hover:opacity-80 text-white hover:text-[#4A90E2]"
+              >
+                <ShoppingCart size={24} />
+                {isLoggedIn && cartItems.length > 0 && (
+                  <span
+                    className="absolute -top-2 -right-2 text-white rounded-full text-xs w-4 h-4 flex items-center justify-center"
+                    style={{ background: palette.accent }}
+                  >
+                    {cartItems.length}
+                  </span>
+                )}
+              </Link>
+            )}
 
             {/* Orders Icon */}
-            {isLoggedIn && (
+            {isLoggedIn && !isAdmin && (
               <Link
                 to="/order-history"
-                className="transition-colors hidden md:block icon-link"
+                className="transition-colors hidden md:block icon-link text-white hover:text-[#4A90E2]"
                 title="Order History"
-                style={{
-                  color:
-                    location.pathname === "/order-history" ||
-                    location.pathname.startsWith("/order-status")
-                      ? palette.hover
-                      : palette.white,
-                }}
               >
                 <History size={24} />
               </Link>
@@ -190,7 +220,7 @@ const NavBar = () => {
             {/* Profile */}
             <div className="relative">
               <button
-                className="text-white hover:opacity-80 flex items-center gap-1 transition-opacity icon-link"
+                className="text-white hover:opacity-80 hover:text-[#4A90E2] flex items-center gap-1 transition-opacity icon-link"
                 onClick={() => {
                   if (isLoggedIn) setProfileOpen(!profileOpen);
                   else navigate("/login");
@@ -227,24 +257,28 @@ const NavBar = () => {
                     </p>
                     <p className="text-xs text-gray-500">{user?.email}</p>
                   </div>
-                  <Link
-                    to="/edit-profile"
-                    className="block px-4 py-2 hover:bg-gray-100 transition-colors"
-                    style={{ color: palette.primary }}
-                    onClick={() => setProfileOpen(false)}
-                  >
-                    <Settings size={16} className="inline mr-2" />
-                    Edit Profile
-                  </Link>
-                  <Link
-                    to="/order-history"
-                    className="block px-4 py-2 hover:bg-gray-100 transition-colors md:hidden"
-                    style={{ color: palette.primary }}
-                    onClick={() => setProfileOpen(false)}
-                  >
-                    <History size={16} className="inline mr-2" />
-                    My Orders
-                  </Link>
+                  {!isAdmin && (
+                    <Link
+                      to="/edit-profile"
+                      className="block px-4 py-2 hover:bg-gray-100 transition-colors"
+                      style={{ color: palette.primary }}
+                      onClick={() => setProfileOpen(false)}
+                    >
+                      <Settings size={16} className="inline mr-2" />
+                      Edit Profile
+                    </Link>
+                  )}
+                  {!isAdmin && (
+                    <Link
+                      to="/order-history"
+                      className="block px-4 py-2 hover:bg-gray-100 transition-colors md:hidden"
+                      style={{ color: palette.primary }}
+                      onClick={() => setProfileOpen(false)}
+                    >
+                      <History size={16} className="inline mr-2" />
+                      My Orders
+                    </Link>
+                  )}
                   <button
                     onClick={onLogoutClick}
                     className="w-full text-left px-4 py-2 hover:bg-gray-100 flex items-center transition-colors"
@@ -277,23 +311,35 @@ const NavBar = () => {
               {link.name}
             </Link>
           ))}
+          {isAdmin && (
+            <Link
+              to="/admin-panel"
+              className="flex items-center p-2 rounded-lg navbar-mobile-link transition-colors"
+              onClick={() => setIsOpen(false)}
+            >
+              <Shield className="w-5 h-5 mr-2" />
+              Admin
+            </Link>
+          )}
 
-          <Link
-            to="/cart"
-            className="flex items-center p-2 rounded-lg navbar-mobile-link transition-colors"
-            onClick={() => setIsOpen(false)}
-          >
-            <ShoppingCart className="w-5 h-5 mr-2" />
-            Cart
-            {isLoggedIn && cartItems.length > 0 && (
-              <span
-                className="ml-1 text-white rounded-full text-xs w-4 h-4 flex items-center justify-center"
-                style={{ background: palette.accent }}
-              >
-                {cartItems.length}
-              </span>
-            )}
-          </Link>
+          {!isAdmin && (
+            <Link
+              to="/cart"
+              className="flex items-center p-2 rounded-lg navbar-mobile-link transition-colors"
+              onClick={() => setIsOpen(false)}
+            >
+              <ShoppingCart className="w-5 h-5 mr-2" />
+              Cart
+              {isLoggedIn && cartItems.length > 0 && (
+                <span
+                  className="ml-1 text-white rounded-full text-xs w-4 h-4 flex items-center justify-center"
+                  style={{ background: palette.accent }}
+                >
+                  {cartItems.length}
+                </span>
+              )}
+            </Link>
+          )}
 
           {isLoggedIn && user ? (
             <div
@@ -304,22 +350,26 @@ const NavBar = () => {
                 <UserIcon className="w-5 h-5 mr-2" />
                 {user.username || user.email}
               </span>
-              <Link
-                to="/order-history"
-                className="flex items-center p-2 navbar-mobile-link transition-colors"
-                onClick={() => setIsOpen(false)}
-              >
-                <History className="w-5 h-5 mr-2" />
-                My Orders
-              </Link>
-              <Link
-                to="/edit-profile"
-                className="flex items-center p-2 navbar-mobile-link transition-colors"
-                onClick={() => setIsOpen(false)}
-              >
-                <Settings className="w-5 h-5 mr-2" />
-                Edit Profile
-              </Link>
+              {!isAdmin && (
+                <Link
+                  to="/order-history"
+                  className="flex items-center p-2 navbar-mobile-link transition-colors"
+                  onClick={() => setIsOpen(false)}
+                >
+                  <History className="w-5 h-5 mr-2" />
+                  My Orders
+                </Link>
+              )}
+              {!isAdmin && (
+                <Link
+                  to="/edit-profile"
+                  className="flex items-center p-2 navbar-mobile-link transition-colors"
+                  onClick={() => setIsOpen(false)}
+                >
+                  <Settings className="w-5 h-5 mr-2" />
+                  Edit Profile
+                </Link>
+              )}
               <button
                 onClick={onLogoutClick}
                 className="flex items-center p-2 w-full navbar-mobile-link transition-colors"
@@ -379,31 +429,11 @@ const NavBar = () => {
           color: inherit;
         }
 
-        /* icon links (cart, order, profile) */
-        .icon-link {
-          color: ${palette.white};
-          transition: color 0.15s ease;
-          display: inline-flex;
-          align-items: center;
-        }
-        .icon-link:hover {
-          color: ${palette.hover};
-        }
+        /* icon links */
+        /* These styles are now handled by Tailwind CSS classes applied directly to the elements. */
 
         /* mobile links */
-        .navbar-mobile-link {
-          color: ${palette.white};
-          transition: color 0.15s ease;
-          display: inline-flex;
-          align-items: center;
-        }
-        .navbar-mobile-link:hover {
-          color: ${palette.hover};
-        }
-        .navbar-mobile-link svg {
-          stroke: currentColor;
-          color: inherit;
-        }
+        /* These styles are now handled by Tailwind CSS classes applied directly to the elements. */
 
         /* mobile links */
         .navbar-mobile-link { color: ${palette.white}; transition: color 0.15s ease; display: inline-flex; align-items: center; }

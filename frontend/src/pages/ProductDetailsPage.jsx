@@ -2,18 +2,27 @@ import React, { useState, useEffect, useContext } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
 import axios from "axios";
 import { ShoppingCart, Loader } from "lucide-react";
+
 import AuthRedirectModal from "../components/AuthRedirectModal";
+import AdminCustomerConflictModal from "../components/AdminCustomerConflictModal";
 import ConfirmationModal from "../components/ConfirmationModal";
-import { AuthContext } from "../components/AuthContext.jsx";
+import { AuthContext as CustomerAuthContext } from "../components/CustomerAuthContext.jsx";
+import { AdminAuthContext } from "../components/AdminAuthContext.jsx";
 import { useCart } from "../components/CartContext";
 
 const ProductDetailsPage = () => {
   const { id } = useParams();
+  const navigate = useNavigate();
+
   const [product, setProduct] = useState(null);
   const [recommendations, setRecommendations] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+
+  // Modals
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
+  const [isAdminConflictModalOpen, setIsAdminConflictModalOpen] =
+    useState(false);
   const [confirmationModal, setConfirmationModal] = useState({
     isOpen: false,
     title: "",
@@ -23,10 +32,14 @@ const ProductDetailsPage = () => {
     cancelText: "Cancel",
     iconType: "info",
   });
-  const { authState } = useContext(AuthContext);
-  const { addToCart } = useCart();
-  const navigate = useNavigate();
 
+  const { authState: customerAuthState } = useContext(CustomerAuthContext);
+  const { authState: adminAuthState } = useContext(AdminAuthContext);
+  const { addToCart } = useCart();
+
+  const inStock = product?.inventory?.stock_quantity ?? 0;
+
+  // Fetch product details
   useEffect(() => {
     window.scrollTo(0, 0);
     const fetchProduct = async () => {
@@ -41,69 +54,75 @@ const ProductDetailsPage = () => {
         setLoading(false);
       }
     };
-
     fetchProduct();
   }, [id]);
 
+  // Fetch recommendations
   useEffect(() => {
-    if (product) {
-      const fetchRecommendations = async () => {
-        try {
-          const res = await axios.get(
-            `http://localhost:5000/api/products?category_id=${product.category_id._id}&limit=5`
-          );
-          // backend may return { items, totalCount } or an array
-          const recItems = Array.isArray(res.data)
-            ? res.data
-            : res.data?.items ?? [];
-          setRecommendations(recItems.filter((p) => p._id !== product._id));
-        } catch (err) {
-          console.error("Failed to fetch recommendations.", err);
-        }
-      };
-      fetchRecommendations();
-    }
+    if (!product) return;
+
+    const fetchRecommendations = async () => {
+      try {
+        const res = await axios.get(
+          `http://localhost:5000/api/products?category_id=${product.category_id._id}&limit=5`
+        );
+        const recItems = Array.isArray(res.data)
+          ? res.data
+          : res.data?.items ?? [];
+        setRecommendations(recItems.filter((p) => p._id !== product._id));
+      } catch (err) {
+        console.error("Failed to fetch recommendations.", err);
+      }
+    };
+    fetchRecommendations();
   }, [product]);
 
-  const inStock = product?.inventory?.stock_quantity ?? 0;
-
+  // Add to cart handler
   const handleAddToCart = () => {
-    if (inStock === 0) {
-      if (authState.isLoggedIn) {
-        // Logged in → show confirmation modal
-        setConfirmationModal({
-          isOpen: true,
-          title: "Out of Stock",
-          message: "This item is currently out of stock.",
-          onConfirm: null,
-          confirmText: null,
-          cancelText: "OK",
-          iconType: "warning",
-        });
-      } else {
-        // Not logged in → show auth redirect modal
-        setIsAuthModalOpen(true);
-      }
+    const isAdmin =
+      adminAuthState.isLoggedIn &&
+      (adminAuthState.user?.role === "admin" ||
+        adminAuthState.user?.role === "manager");
+
+    // Admin trying to access customer action → show conflict modal
+    if (isAdmin) {
+      setIsAdminConflictModalOpen(true);
       return;
     }
 
-    // Item is in stock
-    if (!authState.isLoggedIn) {
+    // Customer not logged in → show auth redirect
+    if (!customerAuthState.isLoggedIn) {
       setIsAuthModalOpen(true);
-    } else {
+      return;
+    }
+
+    // Out of stock
+    if (inStock === 0) {
       setConfirmationModal({
         isOpen: true,
-        title: "Add to Cart",
-        message: "Proceed to add this item to your cart?",
-        onConfirm: () => {
-          addToCart(product);
-          navigate("/cart");
-        },
-        confirmText: "Proceed",
-        cancelText: "Cancel",
-        iconType: "info",
+        title: "Out of Stock",
+        message: "This item is currently out of stock.",
+        onConfirm: null,
+        confirmText: null,
+        cancelText: "OK",
+        iconType: "warning",
       });
+      return;
     }
+
+    // Logged-in customer, item in stock → confirm add to cart
+    setConfirmationModal({
+      isOpen: true,
+      title: "Add to Cart",
+      message: "Proceed to add this item to your cart?",
+      onConfirm: () => {
+        addToCart(product);
+        navigate("/cart");
+      },
+      confirmText: "Proceed",
+      cancelText: "Cancel",
+      iconType: "info",
+    });
   };
 
   if (loading) {
@@ -138,9 +157,14 @@ const ProductDetailsPage = () => {
 
   return (
     <div className="min-h-full flex flex-col p-6">
+      {/* Modals */}
       <AuthRedirectModal
         isOpen={isAuthModalOpen}
         onClose={() => setIsAuthModalOpen(false)}
+      />
+      <AdminCustomerConflictModal
+        isOpen={isAdminConflictModalOpen}
+        onClose={() => setIsAdminConflictModalOpen(false)}
       />
       <ConfirmationModal
         isOpen={confirmationModal.isOpen}
@@ -154,9 +178,10 @@ const ProductDetailsPage = () => {
         cancelText={confirmationModal.cancelText}
         iconType={confirmationModal.iconType}
       />
+
+      {/* Product Details */}
       <div className="container mx-auto max-w-5xl">
         <div className="grid md:grid-cols-2 gap-8">
-          {/* Product Image */}
           <div>
             <img
               src={imageUrl}
@@ -164,8 +189,6 @@ const ProductDetailsPage = () => {
               className="w-full h-auto object-cover rounded-lg shadow-md"
             />
           </div>
-
-          {/* Product Info */}
           <div>
             <h1 className="text-4xl font-bold text-[#1F3B6D] mb-2">
               {product.product_name}
@@ -195,6 +218,7 @@ const ProductDetailsPage = () => {
               </span>
             </div>
 
+            {/* Product Info */}
             <div className="space-y-2 text-[#333333]">
               <p>
                 <strong className="text-[#1F3B6D]">Publisher:</strong>{" "}
@@ -260,6 +284,7 @@ const ProductDetailsPage = () => {
   );
 };
 
+// Simple product card for recommendations
 const ProductCard = ({ product }) => {
   const imageUrl = product.image_url?.startsWith("http")
     ? product.image_url

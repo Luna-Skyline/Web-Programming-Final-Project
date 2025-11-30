@@ -4,22 +4,19 @@ import AdminUser from "../models/AdminUser.js";
 const protectAdmin = async (req, res, next) => {
   let token;
 
-  // 1. Check Authorization header
+  // 1. Check Authorization header or cookie
   if (
     req.headers.authorization &&
     req.headers.authorization.startsWith("Bearer")
   ) {
     token = req.headers.authorization.split(" ")[1];
-  }
-  // 2. Check cookie
-  else if (req.cookies && req.cookies.token) {
+  } else if (req.cookies && req.cookies.token) {
     token = req.cookies.token;
   }
 
-  // ---- No token → allow request but admin = null ----
+  // No token → deny access
   if (!token) {
-    req.admin = null;
-    return next();
+    return res.status(401).json({ message: "Not authorized, no token" });
   }
 
   try {
@@ -30,28 +27,28 @@ const protectAdmin = async (req, res, next) => {
       "-password_hash"
     );
 
-    // If admin no longer exists (deleted, disabled, etc.)
+    // If admin no longer exists → deny access
     if (!admin) {
-      req.admin = null;
-      return next();
+      return res
+        .status(401)
+        .json({ message: "Not authorized, user not found" });
     }
 
-    // Attach admin user
-    req.admin = admin;
+    // Check for admin/manager role
+    const userRole = admin.role;
+    if (userRole !== "admin" && userRole !== "manager") {
+      return res
+        .status(403)
+        .json({ message: "Forbidden, insufficient privileges" });
+    }
 
+    // Attach admin user and proceed
+    req.admin = admin;
     next();
   } catch (error) {
-    // ---- Token expired? Allow request but clear admin ----
-    if (error.name === "TokenExpiredError") {
-      console.warn("Admin token expired (allowing request)");
-      req.admin = null;
-      return next();
-    }
-
-    // Any other JWT error
-    console.error("Admin token verification failed:", error);
-    req.admin = null;
-    return next();
+    // Any JWT error → deny access
+    console.error("Admin token verification failed:", error.message);
+    return res.status(401).json({ message: "Not authorized, token failed" });
   }
 };
 

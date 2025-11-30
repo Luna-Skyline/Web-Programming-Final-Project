@@ -1,4 +1,5 @@
 import Category from "../models/Category.js";
+import Product from "../models/Product.js";
 
 // Admin: Create a new category
 export const createCategory = async (req, res) => {
@@ -8,8 +9,8 @@ export const createCategory = async (req, res) => {
     const newCategory = await Category.create({
       category_name,
       description,
-      genre,
       is_active: true,
+      genre,
     });
 
     res.status(201).json({
@@ -26,7 +27,17 @@ export const createCategory = async (req, res) => {
 export const getAllCategories = async (req, res) => {
   try {
     const categories = await Category.find().sort({ created_at: -1 }).lean();
-    res.status(200).json(categories);
+
+    const categoriesWithProductCount = await Promise.all(
+      categories.map(async (category) => {
+        const productCount = await Product.countDocuments({
+          category_id: category._id,
+        });
+        return { ...category, productCount };
+      })
+    );
+
+    res.status(200).json(categoriesWithProductCount);
   } catch (error) {
     console.error("Error fetching categories:", error);
     res.status(500).json({ message: "Server error" });
@@ -84,6 +95,22 @@ export const deleteCategory = async (req, res) => {
     res.status(200).json({ message: "Category deleted successfully" });
   } catch (error) {
     console.error("Error deleting category:", error);
+    res.status(500).json({ message: "Server error" });
+  }
+};
+
+// Admin: Check if category name exists
+export const checkCategoryName = async (req, res) => {
+  try {
+    const { name } = req.params;
+
+    const category = await Category.findOne({
+      category_name: { $regex: new RegExp(`^${name}$`, "i") },
+    });
+
+    res.status(200).json({ exists: !!category });
+  } catch (error) {
+    console.error("Error checking category name:", error);
     res.status(500).json({ message: "Server error" });
   }
 };

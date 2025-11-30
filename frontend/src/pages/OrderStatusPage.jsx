@@ -11,7 +11,7 @@ import {
   XCircle,
 } from "lucide-react";
 import axios from "axios";
-import { AuthContext } from "../components/AuthContext";
+import { AuthContext } from "../components/CustomerAuthContext";
 import OrderItem from "../components/OrderItem";
 import AuthRedirectModal from "../components/AuthRedirectModal";
 

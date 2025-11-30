@@ -5,10 +5,14 @@ import {
   updateCategory,
   deleteCategory,
   getCategoryById,
+  checkCategoryName,
 } from "../controllers/adminCategoryController.js";
 import protectAdmin from "../middleware/authAdmin.js";
 
 const router = express.Router();
+
+// Check category name exists
+router.get("/check-name/:name", protectAdmin, checkCategoryName);
 
 // Create a new category
 router.post("/", protectAdmin, createCategory);

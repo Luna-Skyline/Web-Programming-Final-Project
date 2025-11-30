@@ -2,6 +2,7 @@ import Order from "../models/Order.js";
 import OrderDetail from "../models/OrderDetail.js";
 import Product from "../models/Product.js";
 import Customer from "../models/Customer.js";
+import Inventory from "../models/Inventory.js";
 
 // Admin: Update order status and optionally payment status
 export const processOrder = async (req, res) => {
@@ -13,9 +14,21 @@ export const processOrder = async (req, res) => {
     const order = await Order.findById(orderId);
     if (!order) return res.status(404).json({ message: "Order not found" });
 
-    // Update allowed fields
-    if (order_status) order.order_status = order_status;
-    if (payment_status) order.payment_status = payment_status;
+    const previousStatus = order.order_status;
+
+    // Update order status
+    if (order_status) {
+      order.order_status = order_status;
+    }
+
+    // Adjust payment status based on order status
+    if (order_status === "Cancelled") {
+      if (order.payment_status === "Pending") {
+        order.payment_status = "Failed";
+      }
+    } else if (payment_status) {
+      order.payment_status = payment_status;
+    }
 
     // If order is delivered and payment method is COD, mark as paid
     if (
@@ -23,6 +36,30 @@ export const processOrder = async (req, res) => {
       order.payment_method === "cod"
     ) {
       order.payment_status = "Paid";
+    }
+
+    // Adjust stock if order is confirmed AND stock has not been adjusted yet
+    if (order_status === "Confirmed" && !order.stock_adjusted) {
+      const orderDetails = await OrderDetail.find({ order_id: orderId });
+      for (const item of orderDetails) {
+        await Inventory.findOneAndUpdate(
+          { product_id: item.product_id },
+          { $inc: { stock_quantity: -item.quantity } }
+        );
+      }
+      order.stock_adjusted = true; // Mark stock as adjusted for this order
+    }
+
+    // Replenish stock if order is cancelled AND stock was adjusted
+    if (order_status === "Cancelled" && order.stock_adjusted) {
+      const orderDetails = await OrderDetail.find({ order_id: orderId });
+      for (const item of orderDetails) {
+        await Inventory.findOneAndUpdate(
+          { product_id: item.product_id },
+          { $inc: { stock_quantity: +item.quantity } }
+        );
+      }
+      order.stock_adjusted = false; // Mark stock as not adjusted
     }
 
     await order.save();

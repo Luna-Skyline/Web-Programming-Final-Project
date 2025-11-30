@@ -2,7 +2,7 @@ import React, { useState, useContext } from "react";
 import { useNavigate } from "react-router-dom";
 import { Trash2, Plus, Minus } from "lucide-react";
 import { useCart } from "../components/CartContext";
-import { AuthContext } from "../components/AuthContext";
+import { AuthContext } from "../components/CustomerAuthContext";
 
 const CartPage = () => {
   const { cartItems, removeFromCart, updateQuantity } = useCart();

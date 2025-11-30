@@ -5,10 +5,14 @@ import {
   updateSupplier,
   deleteSupplier,
   getSupplierById,
+  checkSupplierName,
 } from "../controllers/adminSupplierController.js";
 import protectAdmin from "../middleware/authAdmin.js";
 
 const router = express.Router();
+
+// Check supplier name exists
+router.get("/check-name/:name", protectAdmin, checkSupplierName);
 
 // Create supplier
 router.post("/", protectAdmin, createSupplier);

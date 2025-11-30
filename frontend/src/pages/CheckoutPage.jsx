@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { Loader, AlertCircle, CheckCircle } from "lucide-react";
 import axios from "axios";
 import { useCart } from "../components/CartContext.jsx";
-import { AuthContext } from "../components/AuthContext.jsx";
+import { AuthContext } from "../components/CustomerAuthContext.jsx";
 import OrderSummary from "../components/OrderSummary.jsx";
 import ConfirmationModal from "../components/ConfirmationModal.jsx";
 
