@@ -1,176 +1,228 @@
-# React + Vite + Node.js + MongoDB
+# Web Programming Final Project  
+A complete full-stack web application built with **React + Vite**, **Node.js/Express**, and **MongoDB Atlas**.  
+This system includes an **Admin Panel**, **Product Management**, and MongoDB cloud database collections for e-commerce and retail operations.
 
-This repository contains the source code for the Web Programming Final Project using React (Vite) for the frontend, Express for the backend, and MongoDB for the database. It includes separate environments for client and server, hot module reload (HMR), and a clean folder structure for scalable development.
+---
 
-Currently, two official React plugins for Vite are available:
+# 📌 Table of Contents
+1. [Project Overview](#project-overview)  
+2. [Features](#features)  
+3. [Tech Stack](#tech-stack)  
+4. [Project Structure](#project-structure)  
+5. [Installation Guide](#installation-guide)  
+6. [MongoDB Setup](#mongodb-setup)  
+7. [Environment Variables](#environment-variables)  
+8. [Running the Project](#running-the-project)  
+9. [API Endpoints](#api-endpoints)  
+10. [Admin Panel Overview](#admin-panel-overview)  
+11. [Screenshots (Optional)](#screenshots-optional)  
+12. [License](#license)
 
-[@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/tree/main/packages/plugin-react) uses Babel (or oxc when used with rolldown-vite) for Fast Refresh
+---
 
-[@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/tree/main/packages/plugin-react-swc) uses SWC for Fast Refresh Web Programming Final Project
+# 📘 Project Overview
+This project is a web-based system designed for school/academic purposes.  
+It uses **React (frontend)** and **MongoDB Atlas (database)** to manage:
 
-🚀 Features
+- Products  
+- Categories  
+- Suppliers  
+- Orders  
+- Inventory  
+- Admin users  
+- Customers  
 
-React + Vite fast development environment
+The system is modular, scalable, and easy to maintain.
 
-Modular folder structure for components, pages, and utilities
+---
 
-Reusable UI components
+# ✨ Features
 
-Clean and simple styling using CSS
+### ✅ Frontend (React + Vite)
+- Modern UI built with reusable components  
+- Product list & details  
+- Admin product management  
+- Category and supplier management  
+- Dashboard pages  
+- API integration with backend  
 
-Image and asset organization inside /public
+### ✅ Backend (Node + Express)
+- REST API for all modules  
+- Secure MongoDB connection  
+- Model-based architecture  
+- Error handling  
+- User authentication (JWT-ready)
 
-Optimized build for deployment
+### ✅ MongoDB Atlas
+Includes these collections:
 
-📁 Project Structure
-Web-Programming-Final-Project-main/
+### **Database: `e-commerce`**
+- `products`
+- `orders`
+- `users`
+
+### **Database: `retail-store`**
+- `adminusers`
+- `categories`
+- `customers`
+- `inventories`
+- `orderdetails`
+- `orders`
+- `products`
+- `suppliers`
+
+---
+
+# 🧱 Tech Stack
+
+### **Frontend**
+- React  
+- Vite  
+- CSS  
+- Axios  
+
+### **Backend**
+- Node.js  
+- Express  
+- Mongoose  
+
+### **Database**
+- MongoDB Atlas  
+- Compass (optional)
+
+---
+
+# 📁 Project Structure
+
+project-root/
 │
-├── public/                # Static assets (images, icons, etc.)
+├── client/ # React + Vite Frontend
+│ ├── src/
+│ │ ├── assets/
+│ │ ├── components/
+│ │ ├── pages/
+│ │ ├── App.jsx
+│ │ └── main.jsx
+│ ├── index.html
+│ └── vite.config.js
 │
-├── src/
-│   ├── assets/            # Logos, UI assets
-│   ├── components/        # Reusable UI components
-│   ├── pages/             # Main user-facing pages
-│   ├── App.jsx            # Root component
-│   ├── main.jsx           # Entry point
-│   └── index.css          # Global styles
+├── server/ # Backend (Node + Express)
+│ ├── models/
+│ ├── routes/
+│ ├── controllers/
+│ ├── server.js
+│ └── .env
 │
-├── README.md              # Project documentation
-├── package.json           # Dependencies and scripts
-├── vite.config.js         # Vite config
-└── .gitignore
+└── README.md
 
-🛠️ Installation & Setup
+yaml
+Copy code
 
-Make sure you have Node.js (LTS) installed.
+---
 
-1. Install dependencies
+# 🛠 Installation Guide
+
+### 1️⃣ Clone the repository
+```sh
+git clone https://github.com/your-username/your-repo.git
+cd your-repo
+2️⃣ Install frontend dependencies
+sh
+Copy code
+cd client
 npm install
+3️⃣ Install backend dependencies
+sh
+Copy code
+cd ../server
+npm install
+🗄 MongoDB Setup
+1️⃣ Get your connection string from MongoDB Atlas
+Example:
 
-2. Run in development mode
-npm run dev
-
-3. Build for production
-npm run build
-
-4. Preview production build
-npm run preview
-
-📦 Technologies Used
-
-React
-
-Vite
-
-JavaScript (ES6+)
-
-CSS
-
-Node.js + npm
-
-📚 Notes
-
-All components are modular and easy to edit.
-
-You may reorganize or extend the structure as needed.
-
-Images are placed in public/ for easy access via /image.jpg.
-🗄️ MongoDB Database Setup
-
-This project uses MongoDB Atlas as the cloud database.
-Your cluster may contain multiple databases, including:
-
-admin
-
-e-commerce
-
-orders
-
-products
-
-users
-
-retail-store
-
-adminusers
-
-categories
-
-customers
-
-inventories
-
-orderdetails
-
-orders
-
-products
-
-suppliers
-
-sample_mflix (default MongoDB sample dataset)
-
-local (system database)
-
-🔌 1. MongoDB Connection String
-
-Create a .env file in the project root:
-
-MONGO_URI="your-mongodb-connection-string"
-
-
-Example (DO NOT commit your real password):
-
-MONGO_URI="mongodb+srv://username:password@cluster0.cpu6nrc.mongodb.net/"
-
-🧩 2. Connecting to MongoDB in Your App
-
-If you have a backend (Node.js), use:
-
+perl
+Copy code
+mongodb+srv://username:password@cluster0.cpu6nrc.mongodb.net/
+2️⃣ Create your .env file inside server/
+ini
+Copy code
+MONGO_URI="your connection string here"
+PORT=5000
+JWT_SECRET="your-secret-key"
+3️⃣ Connect backend to MongoDB using Mongoose
+js
+Copy code
 import mongoose from "mongoose";
 
-mongoose.connect(process.env.MONGO_URI, {
-  useNewUrlParser: true,
-  useUnifiedTopology: true,
-})
+mongoose.connect(process.env.MONGO_URI)
 .then(() => console.log("MongoDB Connected"))
-.catch((err) => console.error("MongoDB Error:", err));
-
-🗃 3. Using the Collections
-
-You may access your collections from:
-
-e-commerce/products
-e-commerce/orders
-e-commerce/users
-retail-store/categories
-retail-store/products
-retail-store/suppliers
-retail-store/customers
-
-
-These collections can be used for:
-
-Product management
-
-Supplier management
-
-Order processing
-
-Admin users
-
-Customer data
-
-Inventory
-
+.catch((err) => console.log(err));
 🔐 Environment Variables
+Create server/.env:
 
-Make sure you create a .env file (not committed to GitHub):
-
-MONGO_URI=http://localhost:5173/
+makefile
+Copy code
+MONGO_URI=
 PORT=5000
-JWT_SECRET=your_secret_here
+JWT_SECRET=
+Create client/.env for API usage:
 
-📝 License
+ini
+Copy code
+VITE_API_URL=http://localhost:5000
+▶ Running the Project
+Run backend
+arduino
+Copy code
+cd server
+npm run dev
+Run frontend
+arduino
+Copy code
+cd client
+npm run dev
+Both should run at:
 
-This project is created for academic purposes and may be reused or modified as needed.
+Frontend: http://localhost:5173
+
+Backend: http://localhost:5000
+
+📡 API Endpoints
+Products
+bash
+Copy code
+GET    /api/products
+POST   /api/products
+PUT    /api/products/:id
+DELETE /api/products/:id
+Categories
+bash
+Copy code
+GET    /api/categories
+POST   /api/categories
+Suppliers
+bash
+Copy code
+GET    /api/suppliers
+POST   /api/suppliers
+Orders
+bash
+Copy code
+GET    /api/orders
+POST   /api/orders
+🛠 Admin Panel Overview
+The admin panel allows:
+
+Add / Update / Delete Products
+
+Manage Inventory
+
+Manage Categories
+
+Manage Suppliers
+
+View Orders
+
+View Customer Information
+
+Generate reports (optional)
