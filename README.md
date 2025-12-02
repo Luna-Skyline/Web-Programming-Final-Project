@@ -2,6 +2,8 @@
 A complete full-stack web application built with **React + Vite**, **Node.js/Express**, and **MongoDB Atlas**.  
 This system includes an **Admin Panel**, **Product Management**, and MongoDB cloud database collections for e-commerce and retail operations.
 
+This submission includes **all source code (frontend + backend)**, **MongoDB configuration**, and **complete documentation packaged inside this GitHub repository**, including a clear and detailed **README.md** as required for academic project submission.
+
 ---
 
 # 📌 Table of Contents
@@ -21,8 +23,16 @@ This system includes an **Admin Panel**, **Product Management**, and MongoDB clo
 ---
 
 # 📘 Project Overview
-This project is a web-based system designed for school/academic purposes.  
-It uses **React (frontend)** and **MongoDB Atlas (database)** to manage:
+This project is a full-stack web system designed for school/academic purposes.  
+It includes all required components inside the GitHub repository:
+
+- Frontend (React + Vite)
+- Backend API (Node.js / Express)
+- MongoDB Atlas database configuration
+- Documentation and setup instructions
+- A complete and detailed README.md file
+
+The system manages:
 
 - Products  
 - Categories  
@@ -32,7 +42,7 @@ It uses **React (frontend)** and **MongoDB Atlas (database)** to manage:
 - Admin users  
 - Customers  
 
-The system is modular, scalable, and easy to maintain.
+It is built to be modular, scalable, and easy to maintain.
 
 ---
 
@@ -88,7 +98,7 @@ Includes these collections:
 
 ### **Database**
 - MongoDB Atlas  
-- Compass (optional)
+- MongoDB Compass (optional)
 
 ---
 
@@ -111,7 +121,7 @@ project-root/
 │ ├── routes/
 │ ├── controllers/
 │ ├── server.js
-│ └── .env
+│ └── .env # Not committed, example provided
 │
 └── README.md
 
@@ -137,52 +147,49 @@ Copy code
 cd ../server
 npm install
 🗄 MongoDB Setup
-1️⃣ Get your connection string from MongoDB Atlas
+1️⃣ Get your MongoDB Atlas connection string
 Example:
 
 perl
 Copy code
 mongodb+srv://username:password@cluster0.cpu6nrc.mongodb.net/
-2️⃣ Create your .env file inside server/
+2️⃣ Create .env inside /server
 ini
 Copy code
 MONGO_URI="your connection string here"
 PORT=5000
 JWT_SECRET="your-secret-key"
-3️⃣ Connect backend to MongoDB using Mongoose
+3️⃣ Backend MongoDB connection (Mongoose)
 js
 Copy code
 import mongoose from "mongoose";
 
 mongoose.connect(process.env.MONGO_URI)
-.then(() => console.log("MongoDB Connected"))
-.catch((err) => console.log(err));
+  .then(() => console.log("MongoDB Connected"))
+  .catch((err) => console.log(err));
 🔐 Environment Variables
-Create server/.env:
-
+Create server/.env
 makefile
 Copy code
 MONGO_URI=
 PORT=5000
 JWT_SECRET=
-Create client/.env for API usage:
-
+Create client/.env
 ini
 Copy code
 VITE_API_URL=http://localhost:5000
 ▶ Running the Project
 Run backend
-arduino
+sh
 Copy code
 cd server
 npm run dev
 Run frontend
-arduino
+sh
 Copy code
 cd client
 npm run dev
-Both should run at:
-
+URLs
 Frontend: http://localhost:5173
 
 Backend: http://localhost:5000
@@ -211,7 +218,7 @@ Copy code
 GET    /api/orders
 POST   /api/orders
 🛠 Admin Panel Overview
-The admin panel allows:
+The admin panel allows administrators to:
 
 Add / Update / Delete Products
 
@@ -220,6 +227,13 @@ Manage Inventory
 Manage Categories
 
 Manage Suppliers
+
+View Orders
+
+View Customer Information
+
+Generate reports (optional)
+
 
 View Orders
 
