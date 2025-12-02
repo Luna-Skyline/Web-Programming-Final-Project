@@ -6,22 +6,6 @@ This submission includes **all source code (frontend + backend)**, **MongoDB con
 
 ---
 
-# 📌 Table of Contents
-1. [Project Overview](#project-overview)  
-2. [Features](#features)  
-3. [Tech Stack](#tech-stack)  
-4. [Project Structure](#project-structure)  
-5. [Installation Guide](#installation-guide)  
-6. [MongoDB Setup](#mongodb-setup)  
-7. [Environment Variables](#environment-variables)  
-8. [Running the Project](#running-the-project)  
-9. [API Endpoints](#api-endpoints)  
-10. [Admin Panel Overview](#admin-panel-overview)  
-11. [Screenshots (Optional)](#screenshots-optional)  
-12. [License](#license)
-
----
-
 # 📘 Project Overview
 This project is a full-stack web system designed for school/academic purposes.  
 It includes all required components inside the GitHub repository:
