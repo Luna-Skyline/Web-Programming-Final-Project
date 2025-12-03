@@ -1,4 +1,4 @@
-# Web Programming Final Project  
+oo# Web Programming Final Project  
 A complete full-stack web application built with **React + Vite**, **Node.js/Express**, and **MongoDB Atlas**.  
 This system includes an **Admin Panel**, **Product Management**, and MongoDB cloud database collections for e-commerce and retail operations.
 
@@ -49,11 +49,6 @@ It is built to be modular, scalable, and easy to maintain.
 
 ### ✅ MongoDB Atlas
 Includes these collections:
-
-### **Database: `e-commerce`**
-- `products`
-- `orders`
-- `users`
 
 ### **Database: `retail-store`**
 - `adminusers`
