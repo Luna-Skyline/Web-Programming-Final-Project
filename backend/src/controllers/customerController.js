@@ -48,6 +48,24 @@ export const updateCustomerProfile = async (req, res) => {
       return res.status(404).json({ message: "Customer not found" });
     }
 
+    if (email && email.toLowerCase() !== customer.email.toLowerCase()) {
+      const existingCustomer = await Customer.findOne({
+        email: new RegExp(`^${email}$`, "i"),
+      });
+      if (existingCustomer) {
+        return res.status(409).json({ message: "Email already in use." });
+      }
+    }
+
+    if (username && username.toLowerCase() !== customer.username.toLowerCase()) {
+      const existingCustomer = await Customer.findOne({
+        username: new RegExp(`^${username}$`, "i"),
+      });
+      if (existingCustomer) {
+        return res.status(409).json({ message: "Username already taken." });
+      }
+    }
+
     // Update normal fields
     if (username) customer.username = username;
     if (email) customer.email = email;

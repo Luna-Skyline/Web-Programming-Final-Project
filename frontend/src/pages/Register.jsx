@@ -17,6 +17,7 @@ const RegisterPage = () => {
     address: "",
   });
   const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
   const [loading, setLoading] = useState(false);
 
   const validateForm = () => {
@@ -47,24 +48,23 @@ const RegisterPage = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
+    setSuccess("");
 
     if (!validateForm()) return;
 
     setLoading(true);
     try {
-      const res = await axios.post(
+      await axios.post(
         "http://localhost:5000/api/customers/register",
         formData,
         { withCredentials: true }
       );
 
-      setAuthState({
-        isLoggedIn: true,
-        user: res.data.customer,
-        token: res.data.token,
-      });
+      setSuccess("Registration successful! Redirecting to login page...");
 
-      navigate("/");
+      setTimeout(() => {
+        navigate("/login");
+      }, 2000);
     } catch (err) {
       console.error(err);
 
@@ -91,6 +91,11 @@ const RegisterPage = () => {
 
         {error && (
           <p className="text-red-600 mb-4 text-center font-medium">{error}</p>
+        )}
+        {success && (
+          <p className="text-green-600 mb-4 text-center font-medium">
+            {success}
+          </p>
         )}
 
         <form onSubmit={handleSubmit} className="space-y-4">

@@ -5,7 +5,7 @@ import { useNavigate } from "react-router-dom";
 import AuthRedirectModal from "../components/AuthRedirectModal";
 
 const EditProfilePage = () => {
-  const { authState, logout } = useContext(AuthContext);
+  const { authState, login, logout } = useContext(AuthContext);
   const navigate = useNavigate();
 
   const isAuthenticated =
@@ -68,6 +68,16 @@ const EditProfilePage = () => {
     fetchProfile();
   }, []);
 
+  useEffect(() => {
+    if (error || success) {
+      const timer = setTimeout(() => {
+        setError("");
+        setSuccess("");
+      }, 2000);
+      return () => clearTimeout(timer);
+    }
+  }, [error, success]);
+
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
@@ -127,7 +137,7 @@ const EditProfilePage = () => {
         { headers: { Authorization: `Bearer ${token}` } }
       );
 
-      setAuthState((prev) => ({ ...prev, user: res.data }));
+      login(res.data, authState.token);
 
       setSuccess("Profile updated successfully!");
       setFormData((prev) => ({
