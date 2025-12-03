@@ -23,18 +23,20 @@ export const processOrder = async (req, res) => {
 
     // Adjust payment status based on order status
     if (order_status === "Cancelled") {
-      if (order.payment_status === "Pending") {
-        order.payment_status = "Failed";
-      }
+      order.payment_status = "Failed";
     } else if (payment_status) {
-      order.payment_status = payment_status;
+      if (
+        order.payment_method === "credit_card" &&
+        order.payment_status === "Paid"
+      ) {
+        // Do not change the payment status if it is already "Paid" for a credit card payment
+      } else {
+        order.payment_status = payment_status;
+      }
     }
 
     // If order is delivered and payment method is COD, mark as paid
-    if (
-      order.order_status === "Delivered" &&
-      order.payment_method === "cod"
-    ) {
+    if (order.order_status === "Delivered" && order.payment_method === "cod") {
       order.payment_status = "Paid";
     }
 
