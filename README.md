@@ -1,6 +1,6 @@
-oo# Web Programming Final Project  
+# 🖥️ Web Programming Final Project  
 A complete full-stack web application built with **React + Vite**, **Node.js/Express**, and **MongoDB Atlas**.  
-This system includes an **Admin Panel**, **Product Management**, and MongoDB cloud database collections for e-commerce and retail operations.
+This system includes an **Admin Panel**, **Product Management**, and MongoDB cloud database collections for retail-store operations.
 
 This submission includes **all source code (frontend + backend)**, **MongoDB configuration**, and **complete documentation packaged inside this GitHub repository**, including a clear and detailed **README.md** as required for academic project submission.
 
@@ -82,140 +82,123 @@ Includes these collections:
 ---
 
 # 📁 Project Structure
-
+```
 project-root/
 │
-├── client/ # React + Vite Frontend
-│ ├── src/
-│ │ ├── assets/
-│ │ ├── components/
-│ │ ├── pages/
-│ │ ├── App.jsx
-│ │ └── main.jsx
-│ ├── index.html
-│ └── vite.config.js
+├── backend/
+│   ├── public/
+│   │   └── images/
+│   ├── src/
+│   │   ├── config/
+│   │   ├── controllers/
+│   │   ├── middleware/
+│   │   ├── models/
+│   │   ├── routes/
+│   │   ├── middleware/
+│   │   └── server.js
+│   ├── .env # Not committed, example provided
+│   ├── package-lock.json
+│   ├── package.json
+│   ├── seedAdmin.js
+│   ├── seedInventory.js
+│   └── seedProducts.js
 │
-├── server/ # Backend (Node + Express)
-│ ├── models/
-│ ├── routes/
-│ ├── controllers/
-│ ├── server.js
-│ └── .env # Not committed, example provided
+├── frontend/
+│   ├── public/
+│   ├── src/
+│   │   ├── admin/
+│   │   │   ├── components/
+│   │   │   ├── pages/
+│   │   │   ├── routes/
+│   │   │   └── services/
+│   │   ├── assets/
+│   │   ├── components/
+│   │   ├── pages/
+│   │   ├── routes/
+│   │   ├── App.css
+│   │   ├── App.jsx
+│   │   ├── index.css
+│   │   └── main.jsx
+│   ├── eslint.config.js
+│   ├── index.html
+│   ├── package-lock.json
+│   ├── package.json
+│   ├── README.md
+│   ├── tailwind.config.js
+│   └── vite.config.js
 │
 └── README.md
-
-yaml
-Copy code
-
+```
 ---
 
 # 🛠 Installation Guide
 
-### 1️⃣ Clone the repository
-```sh
-git clone https://github.com/your-username/your-repo.git
-cd your-repo
-2️⃣ Install frontend dependencies
-sh
-Copy code
-cd client
-npm install
-3️⃣ Install backend dependencies
-sh
-Copy code
-cd ../server
-npm install
-🗄 MongoDB Setup
-1️⃣ Get your MongoDB Atlas connection string
-Example:
+Follow the instructions below to install and run the project.
 
-perl
-Copy code
-mongodb+srv://username:password@cluster0.cpu6nrc.mongodb.net/
-2️⃣ Create .env inside /server
-ini
-Copy code
-MONGO_URI="your connection string here"
-PORT=5000
-JWT_SECRET="your-secret-key"
-3️⃣ Backend MongoDB connection (Mongoose)
-js
-Copy code
-import mongoose from "mongoose";
+1️⃣ Clone the Repository
+- git clone https://github.com/Luna-Skyline/Web-Programming-Final-Project.git
+- cd your-repo
 
-mongoose.connect(process.env.MONGO_URI)
-  .then(() => console.log("MongoDB Connected"))
-  .catch((err) => console.log(err));
-🔐 Environment Variables
-Create server/.env
-makefile
-Copy code
-MONGO_URI=
-PORT=5000
-JWT_SECRET=
-Create client/.env
-ini
-Copy code
-VITE_API_URL=http://localhost:5000
-▶ Running the Project
-Run backend
-sh
-Copy code
-cd server
-npm run dev
-Run frontend
-sh
-Copy code
-cd client
-npm run dev
-URLs
-Frontend: http://localhost:5173
+2️⃣ Install Dependencies
+- Backend(/backend)
+  - cd backend
+  - npm install
+- Frontend(/frontend)
+  - cd frontend
+  - npm install
 
-Backend: http://localhost:5000
+3️⃣ Set Up MongoDB Database
+- Create a MongoDB database named:
+  - retail-store
+- Inside this DB, manually create the initial collections
+  - Category Sample Document (Categories Collection):
+    - ```
+      {
+          "category_name": "Fantasy",
+          "description": "Fantasy book category",
+          "is_active": true,
+          "genre": "Fiction"
+      }
+      ```
+  - Supplier Sample Document (Suppliers Collection):
+      - ```
+        {
+          "supplier_name": "ABC Books Supplier",
+          "contact_person": "John Doe",
+          "email": "abcbooks@example.com",
+          "phone": "123-456-7890",
+          "address": "123 Street, City",
+          "is_active": true
+        }
+  - You may insert additional sample documents as needed.
+    
+4️⃣ Configure the Backend .env File
+- Inside the backend folder, create:
+  - backend/.env
+   - Paste this in the .env file:
+     - ```
+        PORT=5000
+        MONGO_URI=your-mongodb-atlas-connection-string
+        MONGO_DBNAME=retail-store
+        JWT_SECRET=mysecretkey
+       
+5️⃣ Run Seed Files (Admin, Inventory, Products)
+- From the backend folder:
+ - ```
+   cd backend
+    node seedAdmin.js
+    node seedInventory.js
+    node seedProducts.js
+- This loads:
+  - AdminUser
+  - Inventory
+  - Products
 
-📡 API Endpoints
-Products
-bash
-Copy code
-GET    /api/products
-POST   /api/products
-PUT    /api/products/:id
-DELETE /api/products/:id
-Categories
-bash
-Copy code
-GET    /api/categories
-POST   /api/categories
-Suppliers
-bash
-Copy code
-GET    /api/suppliers
-POST   /api/suppliers
-Orders
-bash
-Copy code
-GET    /api/orders
-POST   /api/orders
-🛠 Admin Panel Overview
-The admin panel allows administrators to:
+6️⃣ Run the Backend Server
+- npx nodemon src/server.js
 
-Add / Update / Delete Products
+7️⃣ Run the Frontend
+- npm run dev
 
-Manage Inventory
-
-Manage Categories
-
-Manage Suppliers
-
-View Orders
-
-View Customer Information
-
-Generate reports (optional)
-
-
-View Orders
-
-View Customer Information
-
-Generate reports (optional)
+8️⃣ Open the App in Your Browser
+- Visit: http://localhost:5173
